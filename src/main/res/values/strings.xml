@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Blind-Sight</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Blind-Sight</string>
+    <string name="nav_header_subtitle">Binary_Squad</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="menu_home">Acasa</string>
+    <string name="menu_gallery">Despre noi</string>
+    <string name="menu_slideshow">Ajutor</string>
+    <string name="menu_bike_ride">Best Day for Bike Ride</string>
+    <string name="bike_ride_title">Find the Best Day for Cycling</string>
+    <string name="bike_ride_description">Get weather-based recommendations for the best days to go cycling</string>
+    <string name="check_weather">Check Weather</string>
+    <string name="loading_weather">Loading weather data...</string>
+    <string name="weather_error">Error loading weather data</string>
+    <string name="perfect_day">Perfect day for cycling! 🌞</string>
+    <string name="good_day">Good day for cycling! 🌤️</string>
+    <string name="not_recommended">Not recommended for cycling today 🌧️</string>
+</resources>
