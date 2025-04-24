@@ -1,22 +1,32 @@
 <resources>
-    <string name="app_name">Blind-Sight</string>
+    <string name="app_name">BlindSight</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_header_title">Blind-Sight</string>
     <string name="nav_header_subtitle">Binary_Squad</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
+    <string name="navigation_drawer_description">Navigation drawer menu</string>
+    <string name="app_logo_description">BlindSight application logo</string>
+    <string name="accessibility_settings">Accessibility Settings</string>
+    <string name="enable_screen_reader">Enable Screen Reader</string>
+    <string name="enable_high_contrast">Enable High Contrast Mode</string>
+    <string name="enable_large_text">Enable Large Text</string>
+    <string name="enable_voice_feedback">Enable Voice Feedback</string>
+    <string name="gesture_instructions">Swipe left or right to navigate between screens. Double tap to select items.</string>
 
     <string name="menu_home">Acasa</string>
     <string name="menu_gallery">Despre noi</string>
     <string name="menu_slideshow">Ajutor</string>
-    <string name="menu_bike_ride">Best Day for Bike Ride</string>
-    <string name="bike_ride_title">Find the Best Day for Cycling</string>
-    <string name="bike_ride_description">Get weather-based recommendations for the best days to go cycling</string>
-    <string name="check_weather">Check Weather</string>
-    <string name="loading_weather">Loading weather data...</string>
-    <string name="weather_error">Error loading weather data</string>
-    <string name="perfect_day">Perfect day for cycling! 🌞</string>
-    <string name="good_day">Good day for cycling! 🌤️</string>
-    <string name="not_recommended">Not recommended for cycling today 🌧️</string>
+    <string name="about_us_intro">Suntem o echipă mică, dar cu o idee mare.</string>
+    <string name="about_us_team_mission">Suntem trei elevi – doi în clasa a 9-a și unul în clasa a 6-a – care și-au propus să rezolve o problemă reală: cum pot persoanele cu deficiențe de vedere să se deplaseze mai ușor prin oraș?\n\nAșa s-a născut ideea aplicației noastre.\n\nChiar dacă nu avem experiență profesională, ne-am pus pe treabă. Am învățat singuri despre machine learning, am lucrat ore întregi la un model de recunoaștere vizuală și am făcut peste 1000 de poze pentru a-l antrena. Aplicația noastră va putea identifica treceri de pietoni, semne de circulație și alte obiecte importante pentru siguranța celor cu probleme de vedere.</string>
+    <string name="about_us_effort">Știm că nu suntem experți (încă), dar ceea ce ne diferențiază este pasiunea, seriozitatea și dorința de a face o diferență. Nu vrem doar să învățăm programare. Vrem să folosim tehnologia pentru a ajuta oamenii.</string>
+    <string name="about_us_future">Aceasta este doar prima noastră aplicație, dar nu și ultima.</string>
+    <string name="about_us_call_to_action">Dacă citești asta, îți mulțumim că ne acorzi câteva minute. Fie că vrei să ne oferi un feedback, o idee sau doar un mesaj de încurajare, ne-ar bucura enorm să auzim de la tine.</string>
+    <string name="about_us_closing">Suntem abia la început, dar cu sprijinul vostru, putem construi ceva cu adevărat util.</string>
+    <string name="about_us_content_description">Despre noi: Suntem o echipă de elevi care a creat o aplicație pentru a ajuta persoanele cu deficiențe de vedere să navigheze mai ușor.</string>
+
+    <string name="email_address">blindsight2025@gmail.com</string>
+
+
 </resources>

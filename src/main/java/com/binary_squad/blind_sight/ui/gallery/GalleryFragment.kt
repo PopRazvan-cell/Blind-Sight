@@ -4,37 +4,36 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.binary_squad.blind_sight.databinding.FragmentGalleryBinding
 
 class GalleryFragment : Fragment() {
 
-private var _binding: FragmentGalleryBinding? = null
-  // This property is only valid between onCreateView and
-  // onDestroyView.
-  private val binding get() = _binding!!
+    private var _binding: FragmentGalleryBinding? = null
+    // This property is only valid between onCreateView and
+    // onDestroyView.
+    private val binding get() = _binding!!
 
-  override fun onCreateView(
-    inflater: LayoutInflater,
-    container: ViewGroup?,
-    savedInstanceState: Bundle?
-  ): View {
-    val galleryViewModel =
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val galleryViewModel =
             ViewModelProvider(this).get(GalleryViewModel::class.java)
 
-    _binding = FragmentGalleryBinding.inflate(inflater, container, false)
-    val root: View = binding.root
+        _binding = FragmentGalleryBinding.inflate(inflater, container, false)
+        val root: View = binding.root
 
-    val textView: TextView = binding.textGallery
-    galleryViewModel.text.observe(viewLifecycleOwner) {
-      textView.text = it
+        // Observe the ViewModel's text and update the appropriate TextView
+        galleryViewModel.text.observe(viewLifecycleOwner) {
+            binding.introText.text = it
+        }
+        return root
     }
-    return root
-  }
 
-override fun onDestroyView() {
+    override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }

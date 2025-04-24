@@ -31,6 +31,7 @@ private var _binding: FragmentHomeBinding? = null
     homeViewModel.text.observe(viewLifecycleOwner) {
       textView.text = it
     }
+
     return root
   }
 

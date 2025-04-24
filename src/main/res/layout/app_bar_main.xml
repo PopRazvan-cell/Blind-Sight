@@ -5,7 +5,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/app_bar_main"
     tools:context=".MainActivity">
+
+
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_height="wrap_content"
@@ -15,7 +18,7 @@
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width = "match_parent"
-            android:background="?attr/colorPrimary"
+            android:background="@color/blue"
               app:popupTheme="@style/Theme.BlindSight.PopupOverlay"
             android:layout_height = "?attr/actionBarSize" />
 
