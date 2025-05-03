@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/gradient_background_despre_noi"
+    tools:context=".ui.gallery.GalleryFragment" >
+
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <!-- Introduction (Heading) with enhanced effects -->
+
+            <!-- Intro text with modern styling -->
+            <TextView
+                android:id="@+id/textView4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:background="@android:color/transparent"
+                android:elevation="8dp"
+                android:fontFamily="sans-serif-condensed"
+                android:gravity="center"
+
+                android:shadowColor="#4A148C"
+                android:shadowDx="4"
+                android:shadowDy="4"
+                android:shadowRadius="6"
+                android:text="DESPRE NOI"
+                android:textColor="#228ad1"
+                android:textSize="36sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/intro_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:contentDescription="@string/about_us_content_description"
+                android:text="@string/about_us_intro"
+                android:textColor="#BF2E40"
+                android:textSize="25sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium"
+                android:lineSpacingMultiplier="1.2"
+                android:elevation="4dp" />
+
+            <!-- Team and Mission with enhanced readability -->
+
+            <!-- Effort and Passion with dynamic styling -->
+            <TextView
+                android:id="@+id/team_mission_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:background="@android:color/transparent"
+                android:elevation="2dp"
+                android:fontFamily="monospace"
+                android:lineSpacingMultiplier="1.5"
+                android:padding="8dp"
+                android:text="@string/about_us_team_mission"
+                android:textColor="#37474F"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/effort_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/about_us_effort"
+                android:textSize="18sp"
+                android:textColor="#37474F"
+                android:lineSpacingMultiplier="1.5"
+                android:layout_marginBottom="24dp"
+                android:fontFamily="monospace"
+                android:background="@android:color/transparent"
+                android:padding="8dp"
+                android:elevation="2dp" />
+
+            <!-- Future Plans with modern font -->
+            <TextView
+                android:id="@+id/future_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/about_us_future"
+                android:textSize="25sp"
+                android:textColor="#BF2E40"
+                android:lineSpacingMultiplier="1.5"
+                android:layout_marginBottom="24dp"
+                android:fontFamily="sans-serif-medium"
+                android:textStyle="bold"
+                android:background="@android:color/transparent"
+                android:padding="8dp"
+                android:elevation="2dp" />
+
+            <!-- Call to Action with engaging style -->
+            <TextView
+                android:id="@+id/call_to_action_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/about_us_call_to_action"
+                android:textSize="18sp"
+                android:textColor="#37474F"
+                android:lineSpacingMultiplier="1.5"
+                android:layout_marginBottom="24dp"
+                android:fontFamily="monospace"
+                android:background="@android:color/transparent"
+                android:padding="8dp"
+                android:elevation="2dp" />
+
+            <!-- Closing with elegant italic style -->
+            <TextView
+                android:id="@+id/closing_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:lineSpacingMultiplier="1.5"
+                android:text="@string/about_us_closing"
+                android:textColor="#37474F"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"
+                android:background="@android:color/transparent"
+                android:padding="8dp"
+                android:elevation="2dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
