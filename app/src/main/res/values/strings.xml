@@ -18,6 +18,8 @@
     <string name="about_us_call_to_action">Dacă citești asta, îți mulțumim că ne acorzi câteva minute. Fie că vrei să ne oferi un feedback, o idee sau doar un mesaj de încurajare, ne-ar bucura enorm să auzim de la tine.</string>
     <string name="about_us_closing">Suntem abia la început, dar cu sprijinul vostru, putem construi ceva cu adevărat util.</string>
     <string name="about_us_content_description">Despre noi: Suntem o echipă de elevi care a creat o aplicație pentru a ajuta persoanele cu deficiențe de vedere să navigheze mai ușor.</string>
-
+    <string name="blind_sight">Blind Sight</string>
+    <string name="home_subtitle"> Un proiect pentru nevazatori</string>
     <string name="email_address">blindsight2025@gmail.com</string>
+    <string name="empty_space"> </string>
 </resources>
