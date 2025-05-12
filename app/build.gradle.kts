@@ -50,5 +50,7 @@ dependencies {
     implementation(libs.androidx.navigation.ui.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
+    implementation("org.tensorflow:tensorflow-lite:2.16.1")
     androidTestImplementation(libs.androidx.espresso.core)
+
 }
