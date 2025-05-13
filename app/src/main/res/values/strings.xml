@@ -10,6 +10,7 @@
 
     <string name="menu_home">Acasa</string>
     <string name="menu_gallery">Despre noi</string>
+    <string name="DESPRE_NOI">DESPRE NOI</string>
     <string name="menu_slideshow">Ajutor</string>
     <string name="about_us_intro">Suntem o echipa mica, dar cu o idee mare.</string>
     <string name="about_us_team_mission">Suntem trei elevi – doi în clasa a 9-a și unul în clasa a 6-a – care și-au propus să rezolve o problemă reală: cum pot persoanele cu deficiențe de vedere să se deplaseze mai ușor prin oraș?\n\nAșa s-a născut ideea aplicației noastre.\n\nChiar dacă nu avem experiență profesională, ne-am pus pe treabă. Am învățat singuri despre machine learning, am lucrat ore întregi la un model de recunoaștere vizuală și am făcut peste 1000 de poze pentru a-l antrena. Aplicația noastră va putea identifica treceri de pietoni, semne de circulație și alte obiecte importante pentru siguranța celor cu probleme de vedere.</string>
