@@ -49,7 +49,7 @@ class HomeFragment : Fragment() {
     private val inputImageSize = 48 // Model expects 48x48 grayscale images
     private var labels: List<String> = emptyList()
     private var lastProcessedTime = 0L
-    private val processingIntervalMs = 1000L // Process every 1 second
+    private val processingIntervalMs = 5000L // Process every 5 seconds
     private val binding get() = _binding!!
     private val confidenceThreshold = 0.5f // Filter detections below this confidence
 
