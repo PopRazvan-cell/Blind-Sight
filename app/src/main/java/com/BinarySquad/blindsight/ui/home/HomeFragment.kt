@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
@@ -16,6 +17,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import com.BinarySquad.blindsight.R // Import your R file
 import com.BinarySquad.blindsight.databinding.FragmentHomeBinding
 import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraDevice
@@ -49,9 +51,10 @@ class HomeFragment : Fragment() {
     private val inputImageSize = 48 // Model expects 48x48 grayscale images
     private var labels: List<String> = emptyList()
     private var lastProcessedTime = 0L
-    private val processingIntervalMs = 5000L // Process every 5 seconds
+    private val processingIntervalMs = 6000L // Process every 6 seconds
     private val binding get() = _binding!!
     private val confidenceThreshold = 0.5f // Filter detections below this confidence
+    private var mediaPlayer: MediaPlayer? = null
 
     // ActivityResultLauncher for permission request
     private val requestPermissionLauncher = registerForActivityResult(
@@ -81,6 +84,7 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Camera initialization moved to onResume
+        mediaPlayer = MediaPlayer.create(context, R.raw.obiect_neclar_1) // Replace with your sound file
     }
 
     override fun onResume() {
@@ -315,6 +319,7 @@ class HomeFragment : Fragment() {
         val result = processOutput(classOutput[0], bboxOutput[0])
         Log.d("ObjectDetection", "Processed detection: ${result.label}, confidence: ${result.confidence}, box: ${result.boundingBox}")
         if (result.confidence >= confidenceThreshold) {
+            playSoundOnDetection(result.label) // Play sound when an object is detected
             drawBoundingBox(result)
         } else {
             Log.d("ObjectDetection", "Detection filtered out due to low confidence: ${result.confidence}")
@@ -371,17 +376,37 @@ class HomeFragment : Fragment() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        cameraDevice?.close()
-        cameraDevice = null
+    private fun playSoundOnDetection(label: String) {
+        mediaPlayer?.reset() // Reset the MediaPlayer to load a new file
+
+        val soundResourceId = when (label) {
+            "Farmacie" -> R.raw.farmacie_detectata_1
+            "1" -> R.raw.obiect_neclar_1
+            "3" -> R.raw.obiect_neclar_1
+            "Semafor" -> R.raw.posibil_semafor_1
+            "Semn Trecere de Pietoni" -> R.raw.semn_trecere_1
+            "Trecere de pietoni" -> R.raw.trecere_detectata_2
+            else -> null // Or a default sound if the label doesn't match
+        }
+
+        soundResourceId?.let {
+            try {
+                mediaPlayer?.setDataSource(requireContext(), android.net.Uri.parse("android.resource://${context?.packageName}/$it"))
+                mediaPlayer?.prepare()
+                mediaPlayer?.start()
+            } catch (e: IOException) {
+                Log.e("ObjectDetection", "Error playing sound for $label: ${e.message}")
+            }
+        }
     }
+
+
 
     override fun onDestroyView() {
         super.onDestroyView()
-        handlerThread.quitSafely()
-        tflite?.close()
-        tflite = null
+        // ... (rest of your onDestroyView code) ...
+        mediaPlayer?.release()
+        mediaPlayer = null
         _binding = null
     }
 }
