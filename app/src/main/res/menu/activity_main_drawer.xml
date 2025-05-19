@@ -8,75 +8,74 @@
             android:id="@+id/nav_home"
             android:icon="@drawable/ic_camera"
             android:title="@string/menu_home"
-            android:textColor="@color/white" /> <!-- Text alb -->
+            android:textColor="@color/white" />
+
         <item
             android:id="@+id/nav_gallery"
-            android:icon="@drawable/ic_about_us"
+            android:icon="@drawable/about_us"
             android:title="@string/menu_gallery"
-            android:textColor="@color/white" /> <!-- Text alb -->
+            android:textColor="@color/white" />
+
         <item
             android:id="@+id/nav_slideshow"
             android:icon="@drawable/ic_help"
             android:title="@string/menu_slideshow"
-            android:textColor="@color/white" /> <!-- Text alb -->
+            android:textColor="@color/white" />
     </group>
 
-    <!-- Separatoare (8 la număr) -->
+    <!-- Separatoare pentru a împinge emailul jos -->
     <item
-        android:id="@+id/nav_separator"
+        android:id="@+id/nav_separator0"
         android:title="@string/empty_space"
         android:enabled="false"
         android:icon="@android:color/transparent"/>
-
     <item
         android:id="@+id/nav_separator1"
         android:title="@string/empty_space"
         android:enabled="false"
         android:icon="@android:color/transparent"/>
-
     <item
         android:id="@+id/nav_separator2"
         android:title="@string/empty_space"
         android:enabled="false"
         android:icon="@android:color/transparent"/>
-
     <item
         android:id="@+id/nav_separator3"
         android:title="@string/empty_space"
         android:enabled="false"
         android:icon="@android:color/transparent"/>
-
     <item
         android:id="@+id/nav_separator4"
         android:title="@string/empty_space"
         android:enabled="false"
         android:icon="@android:color/transparent"/>
-
     <item
         android:id="@+id/nav_separator5"
         android:title="@string/empty_space"
         android:enabled="false"
         android:icon="@android:color/transparent"/>
-
     <item
         android:id="@+id/nav_separator6"
         android:title="@string/empty_space"
         android:enabled="false"
         android:icon="@android:color/transparent"/>
-
     <item
         android:id="@+id/nav_separator7"
         android:title="@string/empty_space"
         android:enabled="false"
         android:icon="@android:color/transparent"/>
-
     <item
         android:id="@+id/nav_separator8"
         android:title="@string/empty_space"
         android:enabled="false"
         android:icon="@android:color/transparent"/>
+    <item
+        android:id="@+id/nav_separator9"
+        android:title="@string/empty_space"
+        android:enabled="false"
+        android:icon="@android:color/transparent"/>
 
-    <!-- Email la finalul meniului -->
+    <!-- Email la final -->
     <item
         android:id="@+id/nav_email"
         android:title="@string/email_address"
