@@ -23,4 +23,22 @@
     <string name="home_subtitle"> Un proiect pentru nevazatori</string>
     <string name="email_address">blindsight2025@gmail.com</string>
     <string name="empty_space"> </string>
+
+
+    <string name="help_welcome">Bine ai venit la Blindsight!</string>
+
+    <string name="help_instruction_1">Apasă „Deschide Camera” din meniul principal.</string>
+    <string name="help_instruction_2">Ține telefonul spre obiectul dorit.</string>
+    <string name="help_instruction_3">Vei primi o descriere audio a ceea ce se vede.</string>
+
+    <string name="help_ensure_title">Asigură-te că:</string>
+    <string name="help_ensure_1">- Volumul este activ.</string>
+    <string name="help_ensure_2">- Ai dat permisiune la cameră.</string>
+    <string name="help_ensure_3">- Ții camera nemișcată pentru rezultate clare.</string>
+
+    <string name="help_contact">Întrebări? Scrie-ne pe email la blindsight2025@gmail.com.</string>
+
+    <string name="help_navigation_tip">Pentru a intra în meniu, apasă pe cele 3 linii din colțul din stânga sus. Acolo vei vedea cele 3 butoane principale.</string>
+
+
 </resources>
