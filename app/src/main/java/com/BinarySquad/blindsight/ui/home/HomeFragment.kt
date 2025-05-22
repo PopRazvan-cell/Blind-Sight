@@ -84,7 +84,7 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Camera initialization moved to onResume
-        mediaPlayer = MediaPlayer.create(context, R.raw.obiect_neclar_1) // Replace with your sound file
+        mediaPlayer = MediaPlayer.create(context, R.raw.starting_1) // Replace with your sound file
     }
 
     override fun onResume() {
@@ -119,20 +119,35 @@ class HomeFragment : Fragment() {
         if (binding.textureView.isAvailable) {
             openCamera()
         } else {
+            var isFirstDetection = true // Flag to track first detection
             binding.textureView.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
                 @RequiresPermission(Manifest.permission.CAMERA)
                 override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
                     Log.d("ObjectDetection", "SurfaceTexture available, opening camera")
                     openCamera()
                 }
+
                 override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {}
+
                 override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean = false
+
                 override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
-                    val currentTime = System.currentTimeMillis()
-                    if (currentTime - lastProcessedTime >= processingIntervalMs) {
-                        val bitmap = binding.textureView.bitmap ?: return
-                        processImageForObjectDetection(bitmap)
-                        lastProcessedTime = currentTime
+                    if (isFirstDetection) {
+                        // Delay first detection by 3 seconds
+                        handler.postDelayed({
+                            isFirstDetection = false // Allow subsequent detections
+                            val bitmap = binding.textureView.bitmap ?: return@postDelayed
+                            processImageForObjectDetection(bitmap)
+                            lastProcessedTime = System.currentTimeMillis()
+                        }, 5000L) // 5-second delay
+                    } else {
+                        // Normal detection with 6-second interval
+                        val currentTime = System.currentTimeMillis()
+                        if (currentTime - lastProcessedTime >= processingIntervalMs) {
+                            val bitmap = binding.textureView.bitmap ?: return
+                            processImageForObjectDetection(bitmap)
+                            lastProcessedTime = currentTime
+                        }
                     }
                 }
             }
@@ -383,8 +398,8 @@ class HomeFragment : Fragment() {
             "Farmacie" -> R.raw.farmacie_detectata_1
             "1" -> R.raw.obiect_neclar_1
             "3" -> R.raw.obiect_neclar_1
-            "Semafor" -> R.raw.posibil_semafor_1
-            "Semn Trecere de Pietoni" -> R.raw.semn_trecere_1
+            "Semafor" -> R.raw.semafor_2
+            "Semn Trecere de Pietoni" -> R.raw.semn_trecere_2
             "Trecere de pietoni" -> R.raw.trecere_detectata_2
             else -> null // Or a default sound if the label doesn't match
         }

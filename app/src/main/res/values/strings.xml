@@ -23,4 +23,6 @@
     <string name="home_subtitle"> Un proiect pentru nevazatori</string>
     <string name="email_address">blindsight2025@gmail.com</string>
     <string name="empty_space"> </string>
+    <string name="known_bug">Bug cunoscut: daca se reintra in sectiunea "Acasa" din meniu, nu se detecteaza semnele rutiere.</string>
+    <string name="known_bug_2">din meniu, nu se detecteaza semnele rutiere.</string>
 </resources>
