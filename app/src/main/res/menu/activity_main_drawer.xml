@@ -65,6 +65,7 @@
         android:singleLine="false"
         android:ellipsize="none"
         android:maxLines="2" />
+
     <item
         android:id="@+id/known_bug_2"
         android:title="@string/known_bug_2"
@@ -81,6 +82,7 @@
         android:singleLine="false"
         android:ellipsize="none"
         android:maxLines="2" />
+
     <item
         android:id="@+id/nav_separator5"
         android:title="@string/empty_space"
