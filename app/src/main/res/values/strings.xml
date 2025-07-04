@@ -39,6 +39,7 @@
     <string name="help_contact">Întrebări? Scrie-ne pe email la blindsight2025@gmail.com.</string>
 
     <string name="help_navigation_tip">Pentru a intra în meniu, apasă pe cele 3 linii din colțul din stânga sus. Acolo vei vedea cele 3 butoane principale.</string>
-
+    <string name="known_bug">Bug cunoscut: Camera nu mai detecteaza obiectele dupa accesarea meniului!</string>
+    <string name="known_bug_2"> accesarea meniului!</string>
 
 </resources>
