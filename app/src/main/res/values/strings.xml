@@ -7,6 +7,8 @@
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
 
+    <string name="known_bug">Bug cunoscut: Camera nu mai detecteaza </string>
+    <string name="known_bug_2"> obiectele dupa accesarea meniului!</string>
 
     <string name="menu_home">Acasa</string>
     <string name="menu_gallery">Despre noi</string>
@@ -27,7 +29,8 @@
 
     <string name="help_welcome">Bine ai venit la Blindsight!</string>
 
-    <string name="help_instruction_1">Apasă „Deschide Camera” din meniul principal.</string>
+    <string name="help_instruction_1">Prima utilizare a aplicației necesită ajutorul unui însoțitor.</string>
+    <string name="help_instruction_1.1">Ofera acces camerei la prima utilizare.</string>
     <string name="help_instruction_2">Ține telefonul spre obiectul dorit.</string>
     <string name="help_instruction_3">Vei primi o descriere audio a ceea ce se vede.</string>
 
@@ -38,7 +41,7 @@
 
     <string name="help_contact">Întrebări? Scrie-ne pe email la blindsight2025@gmail.com.</string>
 
-    <string name="help_navigation_tip">Pentru a intra în meniu, apasă pe cele 3 linii din colțul din stânga sus. Acolo vei vedea cele 3 butoane principale.</string>
+    <string name="help_navigation_tip">Pentru a intra în meniu, apasă pe cele 3 linii din colțul din stânga sus. Acolo se vor afla cele 3 butoane principale.</string>
 
 
 </resources>
