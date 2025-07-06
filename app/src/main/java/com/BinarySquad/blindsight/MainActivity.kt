@@ -2,11 +2,7 @@ package com.BinarySquad.blindsight
 
 import android.graphics.Color
 import android.os.Bundle
-import android.view.GestureDetector
-import android.view.MotionEvent
-import android.view.ScaleGestureDetector
-import android.view.WindowManager
-import android.view.Menu
+import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -16,6 +12,10 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.BinarySquad.blindsight.databinding.ActivityMainBinding
 import com.google.android.material.navigation.NavigationView
+import android.view.GestureDetector
+import android.view.MotionEvent
+import androidx.navigation.ui.navigateUp
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -55,16 +55,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupGestures() {
-        gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
+        val gestureListener = object : GestureDetector.SimpleOnGestureListener() {
             private val SWIPE_THRESHOLD = 150
             private val SWIPE_VELOCITY_THRESHOLD = 100
 
             override fun onFling(
-                e1: MotionEvent?, e2: MotionEvent?,
-                velocityX: Float, velocityY: Float
+                e1: MotionEvent?,
+                e2: MotionEvent,
+                velocityX: Float,
+                velocityY: Float
             ): Boolean {
-                val deltaX = (e2?.x ?: 0f) - (e1?.x ?: 0f)
-                val deltaY = (e2?.y ?: 0f) - (e1?.y ?: 0f)
+                val deltaX = (e2.x ?: 0f) - (e1?.x ?: 0f)
+                val deltaY = (e2.y ?: 0f) - (e1?.y ?: 0f)
 
                 return when {
                     kotlin.math.abs(deltaX) > kotlin.math.abs(deltaY) && deltaX > SWIPE_THRESHOLD && kotlin.math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD -> {
@@ -78,7 +80,9 @@ class MainActivity : AppCompatActivity() {
                     else -> false
                 }
             }
-        })
+        }
+
+        gestureDetector = GestureDetector(this, gestureListener)
 
         scaleGestureDetector = ScaleGestureDetector(this, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
             override fun onScale(detector: ScaleGestureDetector): Boolean {
@@ -89,6 +93,7 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
+
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         gestureDetector.onTouchEvent(ev)
@@ -123,6 +128,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
-        return navController.navigateUp() || super.onSupportNavigateUp()
+        return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
-    }
+}

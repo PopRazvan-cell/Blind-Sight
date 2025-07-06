@@ -4,11 +4,8 @@ import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.GestureDetector
-import android.view.LayoutInflater
-import android.view.MotionEvent
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import com.BinarySquad.blindsight.databinding.FragmentTutorialBottomBinding
 
@@ -52,15 +49,29 @@ class TutorialBottomFragment : Fragment() {
         currentText = ""
         isPlaying = false
 
-        // Single tap → play/pause
-        binding.tutorialPanel.setOnClickListener {
-            if (isPlaying) pauseTutorial() else startTutorial()
-        }
-
-        // Double tap → restart
         val gestureDetector = GestureDetector(requireContext(), object : GestureDetector.SimpleOnGestureListener() {
-            override fun onDoubleTap(e: MotionEvent?): Boolean {
+            override fun onDoubleTap(e: MotionEvent): Boolean {
                 restartTutorial()
+                return true
+            }
+
+            override fun onFling(
+                e1: MotionEvent?,
+                e2: MotionEvent,
+                velocityX: Float,
+                velocityY: Float
+            ): Boolean {
+                val deltaY = e2.y - (e1?.y ?: 0f)
+                if (deltaY > 150 && velocityY > 200) {
+                    parentFragmentManager.popBackStack() // Close on swipe down
+                    return true
+                }
+                return false
+            }
+
+
+            override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                if (isPlaying) pauseTutorial() else startTutorial()
                 return true
             }
         })
@@ -69,16 +80,25 @@ class TutorialBottomFragment : Fragment() {
             gestureDetector.onTouchEvent(event)
             true
         }
+
+        // Close on back press
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    parentFragmentManager.popBackStack()
+                }
+            })
     }
 
     private fun startTutorial() {
         try {
             if (mediaPlayer == null) {
-                //mediaPlayer = MediaPlayer.create(context, R.raw.tutorial_audio)
+                mediaPlayer = MediaPlayer.create(context, R.raw.ajutor_2)
             }
             mediaPlayer?.start()
         } catch (e: Exception) {
-            // Ignore audio errors
+            // fail silently
         }
 
         isPlaying = true
