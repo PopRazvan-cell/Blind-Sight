@@ -9,92 +9,10 @@
             android:icon="@drawable/ic_camera"
             android:title="@string/menu_home"
             android:textColor="@color/white" />
-
-        <item
-            android:id="@+id/nav_gallery"
-            android:icon="@drawable/about_us"
-            android:title="@string/menu_gallery"
-            android:textColor="@color/white" />
-
-        <item
-            android:id="@+id/nav_slideshow"
-            android:icon="@drawable/ic_help"
-            android:title="@string/menu_slideshow"
-            android:textColor="@color/white" />
     </group>
 
-    <!-- Separatoare pentru a împinge emailul jos -->
-    <item
-        android:id="@+id/nav_separator0"
-        android:title="@string/empty_space"
-        android:enabled="false"
-        android:icon="@android:color/transparent"/>
-    <item
-        android:id="@+id/nav_separator1"
-        android:title="@string/empty_space"
-        android:enabled="false"
-        android:icon="@android:color/transparent"/>
-    <item
-        android:id="@+id/nav_separator2"
-        android:title="@string/empty_space"
-        android:enabled="false"
-        android:icon="@android:color/transparent"/>
-    <item
-        android:id="@+id/nav_separator3"
-        android:title="@string/empty_space"
-        android:enabled="false"
-        android:icon="@android:color/transparent"/>
-    <item
-        android:id="@+id/nav_separator4"
-        android:title="@string/empty_space"
-        android:enabled="false"
-        android:icon="@android:color/transparent"/>
-    <item
-        android:id="@+id/known_bug"
-        android:title="@string/known_bug"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-
-        android:elevation="2dp"
-        android:fontFamily="arial"
-        android:lineSpacingMultiplier="1.5"
-        android:padding="16dp"
-        android:textColor="@color/white"
-        android:enabled="false"
-        android:textSize="14sp"
-        android:singleLine="false"
-        android:ellipsize="none"
-        android:maxLines="2" />
-
-    <item
-        android:id="@+id/known_bug_2"
-        android:title="@string/known_bug_2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-
-        android:elevation="2dp"
-        android:fontFamily="arial"
-        android:lineSpacingMultiplier="1.5"
-        android:padding="16dp"
-        android:textColor="@color/white"
-        android:enabled="false"
-        android:textSize="14sp"
-        android:singleLine="false"
-        android:ellipsize="none"
-        android:maxLines="2" />
-
-    <item
-        android:id="@+id/nav_separator5"
-        android:title="@string/empty_space"
-        android:enabled="false"
-        android:icon="@android:color/transparent"/>
+    <!-- Email at the bottom is now handled by footer layout, so no need for empty separators -->
 
 
 
-    <!-- Email la final -->
-    <item
-        android:id="@+id/nav_email"
-        android:title="@string/email_address"
-        android:icon="@drawable/ic_mail"
-        android:textColor="@color/white"/>
 </menu>

@@ -1,10 +1,11 @@
 package com.BinarySquad.blindsight
 
-import android.media.MediaPlayer
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.*
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import com.BinarySquad.blindsight.databinding.FragmentTutorialBottomBinding
@@ -14,25 +15,23 @@ class TutorialBottomFragment : Fragment() {
     private var _binding: FragmentTutorialBottomBinding? = null
     private val binding get() = _binding!!
 
-    private var mediaPlayer: MediaPlayer? = null
     private var isPlaying = false
-    private var currentText = ""
-    private val fullText = """
-        👋 Bine ai venit la Blindsight!
+    private var lastTapTime = 0L
+    private val doubleTapTimeout = 300L
+    private val handler = Handler(Looper.getMainLooper())
 
-        🔍 Cum funcționează aplicația?
-
-        ✅ Apasă „Deschide Camera” din meniul principal.
-        ✅ Ține telefonul spre obiectul dorit.
-        ✅ Vei primi o descriere audio a ceea ce se vede.
-
-        🎤 Asigură-te că:
-        - Volumul este activ.
-        - Ai dat permisiune la cameră.
-        - Ții camera nemișcată pentru rezultate clare.
-
-        📩 Întrebări? Scrie-ne la: support@blindsight.com
-    """.trimIndent()
+    private val sentences = listOf(
+        "👋 Bine ai venit la Blindsight!",
+        "🔍 Cum funcționează aplicația?",
+        "✅ Apasă „Deschide Camera” din meniul principal.",
+        "✅ Ține telefonul spre obiectul dorit.",
+        "✅ Vei primi o descriere audio a ceea ce se vede.",
+        "🎤 Asigură-te că:",
+        "- Volumul este activ.",
+        "- Ai dat permisiune la cameră.",
+        "- Ții camera nemișcată pentru rezultate clare.",
+        "📩 Întrebări? Scrie-ne la: support@blindsight.com"
+    )
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -43,96 +42,101 @@ class TutorialBottomFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+        resetTutorial()
 
-        binding.tutorialText.text = ""
-        currentText = ""
-        isPlaying = false
-
-        val gestureDetector = GestureDetector(requireContext(), object : GestureDetector.SimpleOnGestureListener() {
-            override fun onDoubleTap(e: MotionEvent): Boolean {
-                restartTutorial()
-                return true
-            }
-
-            override fun onFling(
-                e1: MotionEvent?,
-                e2: MotionEvent,
-                velocityX: Float,
-                velocityY: Float
-            ): Boolean {
-                val deltaY = e2.y - (e1?.y ?: 0f)
-                if (deltaY > 150 && velocityY > 200) {
-                    parentFragmentManager.popBackStack() // Close on swipe down
-                    return true
-                }
-                return false
-            }
-
-
-            override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-                if (isPlaying) pauseTutorial() else startTutorial()
-                return true
-            }
-        })
+        // Setup gesture for dismiss
+        var downY = 0f
+        var downX = 0f
 
         binding.tutorialPanel.setOnTouchListener { _, event ->
-            gestureDetector.onTouchEvent(event)
-            true
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    downY = event.y
+                    downX = event.x
+                    true
+                }
+
+                MotionEvent.ACTION_UP -> {
+                    val deltaY = event.y - downY
+                    val deltaX = event.x - downX
+
+                    if (deltaY > 150 && kotlin.math.abs(deltaX) < 100) {
+                        parentFragmentManager.popBackStack()
+                        return@setOnTouchListener true
+                    }
+
+                    val now = System.currentTimeMillis()
+                    if (now - lastTapTime <= doubleTapTimeout) {
+                        restartTutorial()
+                        lastTapTime = 0
+                    } else {
+                        if (isPlaying) pauseTutorial() else startTutorial()
+                        lastTapTime = now
+                    }
+                    return@setOnTouchListener true
+                }
+
+                else -> false
+            }
         }
 
-        // Close on back press
         requireActivity().onBackPressedDispatcher.addCallback(
             viewLifecycleOwner,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
                     parentFragmentManager.popBackStack()
                 }
-            })
+            }
+        )
     }
 
     private fun startTutorial() {
-        try {
-            if (mediaPlayer == null) {
-                mediaPlayer = MediaPlayer.create(context, R.raw.ajutor_2)
-            }
-            mediaPlayer?.start()
-        } catch (e: Exception) {
-            // fail silently
-        }
-
         isPlaying = true
-        typeText(fullText)
+        showAllTutorialTextInstantly()
     }
 
     private fun pauseTutorial() {
-        mediaPlayer?.pause()
         isPlaying = false
     }
 
     private fun restartTutorial() {
-        pauseTutorial()
-        mediaPlayer?.seekTo(0)
-        currentText = ""
-        binding.tutorialText.text = ""
+        resetTutorial()
         startTutorial()
     }
 
-    private fun typeText(text: String, index: Int = 0) {
-        if (!isPlaying || index >= text.length) return
+    private fun resetTutorial() {
+        isPlaying = false
+        binding.tutorialTextContainer.removeAllViews()
+    }
 
-        currentText += text[index]
-        binding.tutorialText.text = currentText
+    private fun showAllTutorialTextInstantly() {
+        binding.tutorialTextContainer.removeAllViews()
 
-        Handler(Looper.getMainLooper()).postDelayed({
-            typeText(text, index + 1)
-        }, 20)
+        val tts = (activity as? MainActivity)?.tts
+        val fullText = sentences.joinToString("\n")
+
+        binding.tutorialContainer.setOnClickListener {
+            tts?.speak(fullText, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, null)
+        }
+
+        for (line in sentences) {
+            val textView = TextView(requireContext()).apply {
+                text = line
+                setTextColor(Color.parseColor("#E0FFE0"))
+                textSize = 18f
+                gravity = Gravity.CENTER
+                setPadding(16, 8, 16, 8)
+            }
+            binding.tutorialTextContainer.addView(textView)
+        }
+
+        handler.post {
+            binding.scrollView.fullScroll(View.FOCUS_DOWN)
+        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        mediaPlayer?.release()
-        mediaPlayer = null
         _binding = null
     }
 }
