@@ -1,21 +1,20 @@
 package com.BinarySquad.blindsight
 
-import android.graphics.Color
 import android.os.Bundle
-import android.view.*
+import android.view.GestureDetector
+import android.view.Menu
+import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.BinarySquad.blindsight.databinding.ActivityMainBinding
 import com.google.android.material.navigation.NavigationView
-import android.view.GestureDetector
-import android.view.MotionEvent
-import androidx.navigation.ui.navigateUp
-
 
 class MainActivity : AppCompatActivity() {
 
@@ -25,15 +24,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var scaleGestureDetector: ScaleGestureDetector
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            WindowManager.LayoutParams.FLAG_FULLSCREEN
-        )
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        setSupportActionBar(binding.appBarMain.toolbar)
 
         val drawerLayout: DrawerLayout = binding.drawerLayout
         val navView: NavigationView = binding.navView
@@ -41,7 +34,6 @@ class MainActivity : AppCompatActivity() {
         navView.layoutParams = navView.layoutParams.apply {
             width = resources.displayMetrics.widthPixels
         }
-        drawerLayout.setScrimColor(Color.TRANSPARENT)
 
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         appBarConfiguration = AppBarConfiguration(
@@ -60,23 +52,23 @@ class MainActivity : AppCompatActivity() {
             private val SWIPE_VELOCITY_THRESHOLD = 100
 
             override fun onFling(
-                e1: MotionEvent?,
-                e2: MotionEvent,
-                velocityX: Float,
-                velocityY: Float
+                e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float
             ): Boolean {
-                val deltaX = (e2.x ?: 0f) - (e1?.x ?: 0f)
-                val deltaY = (e2.y ?: 0f) - (e1?.y ?: 0f)
+                if (e1 == null || e2 == null) return false
+                val deltaX = e2.x - e1.x
+                val deltaY = e2.y - e1.y
 
                 return when {
                     kotlin.math.abs(deltaX) > kotlin.math.abs(deltaY) && deltaX > SWIPE_THRESHOLD && kotlin.math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD -> {
                         openDrawer()
                         true
                     }
+
                     kotlin.math.abs(deltaY) > kotlin.math.abs(deltaX) && deltaY < -SWIPE_THRESHOLD && kotlin.math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD -> {
                         openTutorialPanel()
                         true
                     }
+
                     else -> false
                 }
             }
@@ -93,7 +85,6 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
-
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         gestureDetector.onTouchEvent(ev)
