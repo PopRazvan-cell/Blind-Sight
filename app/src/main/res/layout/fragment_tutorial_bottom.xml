@@ -1,37 +1,52 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/tutorialPanel"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/transparent">
+    android:background="#AA000000"
+    tools:context=".TutorialBottomFragment"
+    android:overScrollMode="never">
 
     <LinearLayout
-        android:id="@+id/tutorial_container"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:layout_gravity="bottom"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="24dp"
-        android:elevation="8dp"
-        android:clipToPadding="false"
-        android:gravity="center"
-        android:layout_margin="12dp"
-        android:background="@drawable/rounded_black_bg">
+        android:gravity="bottom">
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <TextView
-            android:id="@+id/tutorialText"
+        <Space
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:text=""
-            android:lineSpacingExtra="8dp"
-            android:gravity="center_horizontal"
-            android:importantForAccessibility="yes" />
-    </ScrollView>
-</LinearLayout>
-    </FrameLayout>
+            android:layout_height="0dp"
+            android:layout_weight="0.6" />
+
+        <LinearLayout
+            android:id="@+id/tutorialContainer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.4"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:gravity="center"
+            android:elevation="8dp"
+            android:clipToPadding="false"
+            android:layout_margin="12dp"
+            android:background="@drawable/rounded_black_bg"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ScrollView
+                android:id="@+id/scrollView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fillViewport="true"
+                android:background="@android:color/black">
+
+                <LinearLayout
+                    android:id="@+id/tutorialTextContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center" />
+            </ScrollView>
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>
