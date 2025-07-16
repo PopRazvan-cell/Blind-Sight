@@ -34,7 +34,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Make fullscreen
         window.setFlags(
             WindowManager.LayoutParams.FLAG_FULLSCREEN,
             WindowManager.LayoutParams.FLAG_FULLSCREEN
@@ -71,7 +70,7 @@ class MainActivity : AppCompatActivity() {
 
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         appBarConfiguration = AppBarConfiguration(
-            setOf(R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow),
+            setOf(R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow, R.id.nav_about),
             drawerLayout
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
@@ -81,22 +80,17 @@ class MainActivity : AppCompatActivity() {
         setupMenuConfirmation(navView)
         setupMenuConfirmation(settingsDrawer)
 
-        // Add DrawerListener to lock/unlock drawers accordingly
         drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) {}
-
             override fun onDrawerOpened(drawerView: View) {
                 updateDrawerLockMode()
             }
-
             override fun onDrawerClosed(drawerView: View) {
                 updateDrawerLockMode()
             }
-
             override fun onDrawerStateChanged(newState: Int) {}
         })
 
-        // Initialize drawer lock mode state
         updateDrawerLockMode()
     }
 
@@ -104,15 +98,12 @@ class MainActivity : AppCompatActivity() {
         val drawerLayout = binding.drawerLayout
 
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            // Lock the settings drawer (right) when main drawer (left) is open
             drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, GravityCompat.END)
             drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.START)
         } else if (drawerLayout.isDrawerOpen(GravityCompat.END)) {
-            // Lock the main drawer (left) when settings drawer (right) is open
             drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, GravityCompat.START)
             drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.END)
         } else {
-            // Both drawers unlocked when none open
             drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.START)
             drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.END)
         }
@@ -155,14 +146,12 @@ class MainActivity : AppCompatActivity() {
                 return when {
                     kotlin.math.abs(deltaX) > kotlin.math.abs(deltaY) &&
                             deltaX > SWIPE_THRESHOLD && kotlin.math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD -> {
-                        // Only open left drawer if right drawer is closed
                         if (!drawerLayout.isDrawerOpen(GravityCompat.END)) openDrawer()
                         true
                     }
 
                     kotlin.math.abs(deltaX) > kotlin.math.abs(deltaY) &&
                             deltaX < -SWIPE_THRESHOLD && kotlin.math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD -> {
-                        // Only open right drawer if left drawer is closed
                         if (!drawerLayout.isDrawerOpen(GravityCompat.START)) openSettingsDrawer()
                         true
                     }
@@ -199,13 +188,19 @@ class MainActivity : AppCompatActivity() {
     private fun setupMenuConfirmation(navView: NavigationView) {
         navView.setNavigationItemSelectedListener { menuItem ->
             val now = System.currentTimeMillis()
+            val navController = findNavController(R.id.nav_host_fragment_content_main)
+
             if (menuItem.itemId == selectedMenuItemId && (now - lastTapTime < DOUBLE_TAP_TIMEOUT)) {
-                // Confirm selection
                 menuItem.isChecked = true
                 binding.drawerLayout.closeDrawers()
+
+                when (menuItem.itemId) {
+                    R.id.nav_about -> navController.navigate(R.id.nav_about)
+                    else -> navController.navigate(menuItem.itemId)
+                }
+
                 true
             } else {
-                // First tap: speak title
                 selectedMenuItemId = menuItem.itemId
                 lastTapTime = now
                 val title = menuItem.title.toString()
