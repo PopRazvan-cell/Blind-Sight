@@ -1,9 +1,12 @@
+
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
 }
 
 android {
+
     namespace = "com.BinarySquad.blindsight"
     compileSdk = 35
 
@@ -15,6 +18,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildFeatures {
+        viewBinding;true
     }
 
     buildTypes {
