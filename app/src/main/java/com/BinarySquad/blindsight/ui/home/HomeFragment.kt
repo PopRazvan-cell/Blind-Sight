@@ -53,9 +53,9 @@ class HomeFragment : Fragment() {
     private val inputImageSize = 48
     private var labels: List<String> = emptyList()
     private var lastProcessedTime = 0L
-    private val processingIntervalMs = 6000L
+    private val processingIntervalMs = 3000L
     private val binding get() = _binding!!
-    private val confidenceThreshold = 0.5f
+    private val confidenceThreshold = 0.9f
     private var detectionMediaPlayer: MediaPlayer? = null
     private var startupMediaPlayer: MediaPlayer? = null
     private var isFirstDetection = true // Moved to class scope to reset on resume
@@ -456,7 +456,7 @@ class HomeFragment : Fragment() {
             Log.d("ObjectDetection", "Input buffer size: ${inputBuffer.capacity()}")
 
             // Initialize outputs based on expected model structure
-            val classOutput = Array(1) { FloatArray(12) } // 12 classes
+            val classOutput = Array(1) { FloatArray(6) } // 6 classes
             val bboxOutput = Array(1) { FloatArray(4) }  // x, y, width, height
 
             // Run inference with two outputs
@@ -565,10 +565,11 @@ class HomeFragment : Fragment() {
             val soundResourceId = when (label) {
                 "Farmacie" -> R.raw.farmacie_detectata_1
                 "Semn pentru statie de autobuz" -> R.raw.semn_statie_1
-                "3" -> R.raw.obiect_neclar_1
-                "Semafor" -> R.raw.semafor_2
+                "Semafor rosu" -> R.raw.semafor_1
+                "Semafor verde" -> R.raw.semafor_2
                 "Semn pentru trecere de pietoni" -> R.raw.semn_trecere_2
                 "Trecere de pietoni" -> R.raw.trecere_detectata_2
+
 
 
 

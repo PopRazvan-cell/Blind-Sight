@@ -1,61 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.drawerlayout.widget.DrawerLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fitsSystemWindows="true">
+    android:layout_height="match_parent">
 
-    <!-- Main Content -->
-    <include
-        android:id="@+id/app_bar_main"
-        layout="@layout/app_bar_main"
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="wrap_content"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
-    <!-- LEFT Drawer (Main Menu) -->
-    <com.google.android.material.navigation.NavigationView
-        android:id="@+id/nav_view"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:background="@color/dark_blue1"
-        android:fitsSystemWindows="true"
-        app:headerLayout="@layout/menu_header"
-        app:menu="@menu/activity_main_drawer"
-        app:itemIconTint="@color/white"
-        app:itemTextColor="@color/white">
-
-        <!-- FrameLayout to hold and align footer at the bottom -->
-        <FrameLayout
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/dark_blue1"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
-            <include
-                layout="@layout/menu_footer"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom" />
+    </com.google.android.material.appbar.AppBarLayout>
 
-        </FrameLayout>
-
-    </com.google.android.material.navigation.NavigationView>
-
-
-
-
-    <!-- RIGHT Drawer (Settings Menu) -->
-    <com.google.android.material.navigation.NavigationView
-        android:id="@+id/settings_drawer"
-        android:layout_width="wrap_content"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="end"
-        android:background="@color/dark_blue1"
-        android:fitsSystemWindows="true"
-        app:headerLayout="@layout/settings_header"
-        app:menu="@menu/settings_main_drawer"
-        app:itemIconTint="@color/white"
-        app:itemTextColor="@color/white" />
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-</androidx.drawerlayout.widget.DrawerLayout>
+        <!-- Connect Button -->
+        <Button
+            android:id="@+id/btn_connect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Connect"
+            android:backgroundTint="@color/dark_blue1"
+            android:textColor="@color/white"
+            android:layout_margin="16dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Add other main content here if needed -->
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

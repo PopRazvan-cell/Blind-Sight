@@ -1,9 +1,12 @@
 package com.BinarySquad.blindsight.ui.bluetooth;
 
 
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -13,6 +16,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -72,8 +76,7 @@ public class ChatActivity extends AppCompatActivity {
             client.start();
 
             connectedDevice = device.getAddress();
-            btnSend = findViewById(R.id.btn_send);
-            txtMessage = findViewById(R.id.etx_message);
+
 
         } catch (Exception err) {
             Toast.makeText(this, err.getMessage(), Toast.LENGTH_LONG).show();
@@ -83,7 +86,7 @@ public class ChatActivity extends AppCompatActivity {
 
     Handler mHandler = new Handler(msg -> {
 
-        switch (msg.what){
+        switch (msg.what) {
             case STATE_LISTENING:
                 Toast.makeText(this, "Listening...", Toast.LENGTH_LONG).show();
                 break;
@@ -103,19 +106,9 @@ public class ChatActivity extends AppCompatActivity {
             case STATE_MESSAGE_RECEIVED:
 
                 byte[] readBuffer = (byte[]) msg.obj;
-                String tempMsg = new String(readBuffer,0, msg.arg1);
-                if (tempMsg.length() == 0)  break;
-                MessageItem msgItem = new MessageItem(tempMsg, true);
-                if (tempMsg.equals("\r\n")) break;
-                adapter.add(msgItem);
-                adapter.notifyDataSetChanged();
-                vMessages.smoothScrollToPosition(adapter.getItemCount());
-                try {
-                    saveMessageToDatabase(tempMsg, false);
-                } catch (InterruptedException | JSONException e) {
-                    e.printStackTrace();
-                }
-                break;
+                String tempMsg = new String(readBuffer, 0, msg.arg1);
+                if (tempMsg.length() == 0) break;
+                Log.d("tempMsg", "Ready to go");
         }
         return true;
     });
@@ -124,18 +117,34 @@ public class ChatActivity extends AppCompatActivity {
 
         private BluetoothDevice mBluetoothDevice;
         private BluetoothSocket mBluetoothSocket;
+        
+        private Context mContext;
 
-        public ClientClass(BluetoothDevice bluetoothDevice){
+        public ClientClass(Context context, BluetoothDevice bluetoothDevice, Handler handler) {
+            mContext = context; // Store the Context
             mBluetoothDevice = bluetoothDevice;
+            mHandler = handler;
             try {
+                if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    // Permission not granted, handle accordingly
+                    return;
+                }
                 mBluetoothSocket = mBluetoothDevice.createInsecureRfcommSocketToServiceRecord(MY_UUID);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
-        public void run(){
+        public ClientClass(BluetoothDevice device) {
+        }
+
+        @Override
+        public void run() {
             try {
+                if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    // Permission not granted, handle accordingly
+                    return;
+                }
                 mBluetoothSocket.connect();
                 Message message = Message.obtain();
                 message.what = STATE_CONNECTED;
@@ -143,7 +152,7 @@ public class ChatActivity extends AppCompatActivity {
 
                 mSendReceive = new SendReceive(mBluetoothSocket);
                 mSendReceive.start();
-            } catch (IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
                 Message message = Message.obtain();
                 message.what = STATE_CONNECTION_FAILED;
@@ -155,72 +164,37 @@ public class ChatActivity extends AppCompatActivity {
     public class SendReceive extends Thread {
         private final BluetoothSocket mBluetoothSocket;
         private final InputStream mInputStream;
-        private final OutputStream mOutputStream;
 
-        public SendReceive(BluetoothSocket bluetoothSocket){
+        public SendReceive(BluetoothSocket bluetoothSocket) {
 
             mBluetoothSocket = bluetoothSocket;
             InputStream tempIn = null;
-            OutputStream tempOut = null;
-            btnSend.setOnClickListener(v -> {
-                        this.write(txtMessage.getText().toString().getBytes());
-                        MessageItem item = new MessageItem(txtMessage.getText().toString(), false);
-                        adapter.add(item);
-                        adapter.notifyDataSetChanged();
-                        vMessages.smoothScrollToPosition(adapter.getItemCount());
-                        txtMessage.setText("");
-                    }
-            );
 
             try {
                 tempIn = mBluetoothSocket.getInputStream();
-                tempOut = mBluetoothSocket.getOutputStream();
-            } catch (IOException e){
+
+            } catch (IOException e) {
                 e.printStackTrace();
             }
 
             mInputStream = tempIn;
-            mOutputStream = tempOut;
+
 
         }
 
-        public void run(){
+        public void run() {
             byte[] buffer = new byte[1024];
             int bytes;
 
-            while (true){
+            while (true) {
                 try {
                     bytes = mInputStream.read(buffer);
                     mHandler.obtainMessage(STATE_MESSAGE_RECEIVED, bytes, -1, buffer).sendToTarget();
-                } catch (IOException e){
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         }
 
-        public void write(byte[] bytes){
-            try {
-                byte[] data = new byte[27];
-                int i = 0;
-                try {
-                    for (byte b : bytes) {
-                        data[i++] = b;
-                    }
-                } catch (IndexOutOfBoundsException exc) {
-                    Toast.makeText(ChatActivity.this,
-                            "The max length of a message is 27 characters!",
-                            Toast.LENGTH_SHORT).show();
-                }
-                while (i < 27) {
-                    data[i++] = 0x20;
-                }
-
-                mOutputStream.write(data);
-                mOutputStream.flush();
-            } catch (IOException e){
-                e.printStackTrace();
-            }
-        }
     }
-
 }

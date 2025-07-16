@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.tensorflow.lite.support)
     implementation(libs.tensorflow.lite.metadata)
+    implementation(libs.tensorflow.lite.gpu)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     implementation("org.tensorflow:tensorflow-lite:2.16.1")
