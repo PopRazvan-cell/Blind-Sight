@@ -59,6 +59,9 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
+        android:background="@color/dark_blue1"
+        app:itemTextColor="@color/white"
+        app:itemIconTint="@color/white"
         app:menu="@menu/activity_main_drawer"
         app:headerLayout="@layout/menu_header" />
 
@@ -69,6 +72,9 @@
         android:layout_height="match_parent"
         android:layout_gravity="end"
         android:fitsSystemWindows="true"
+        android:background="@color/dark_blue1"
+        app:itemTextColor="@color/white"
+        app:itemIconTint="@color/white"
         app:menu="@menu/settings_main_drawer"
         app:headerLayout="@layout/settings_header" />
 

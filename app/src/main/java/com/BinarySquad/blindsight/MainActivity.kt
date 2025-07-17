@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.view.*
 import android.view.GestureDetector.SimpleOnGestureListener
-import android.view.MotionEvent
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
@@ -14,8 +13,6 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
-import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.navigation.NavigationView
 import java.util.*
 
@@ -38,9 +35,8 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main) // no more view binding
+        setContentView(R.layout.activity_main)
 
-        // Manual view bindings
         drawerLayout = findViewById(R.id.drawer_layout)
         navView = findViewById(R.id.nav_view)
         settingsDrawer = findViewById(R.id.settings_main_drawer)
@@ -56,24 +52,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         val screenWidth = resources.displayMetrics.widthPixels
-
-        settingsDrawer.layoutParams = settingsDrawer.layoutParams.apply {
-            width = screenWidth
-        }
-
-        navView.layoutParams = navView.layoutParams.apply {
-            width = screenWidth
-        }
-
+        settingsDrawer.layoutParams.width = screenWidth
+        navView.layoutParams.width = screenWidth
         drawerLayout.setScrimColor(Color.TRANSPARENT)
 
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
         appBarConfiguration = AppBarConfiguration(
-            setOf(R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow),
+            setOf(R.id.nav_home, R.id.nav_about),
             drawerLayout
         )
-        setupActionBarWithNavController(navController, appBarConfiguration)
-        navView.setupWithNavController(navController)
 
         btnConnect.setOnClickListener {
             tts.speak("Opening navigation drawer", TextToSpeech.QUEUE_FLUSH, null, null)
@@ -86,14 +72,8 @@ class MainActivity : AppCompatActivity() {
 
         drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) {}
-            override fun onDrawerOpened(drawerView: View) {
-                updateDrawerLockMode()
-            }
-
-            override fun onDrawerClosed(drawerView: View) {
-                updateDrawerLockMode()
-            }
-
+            override fun onDrawerOpened(drawerView: View) = updateDrawerLockMode()
+            override fun onDrawerClosed(drawerView: View) = updateDrawerLockMode()
             override fun onDrawerStateChanged(newState: Int) {}
         })
 
@@ -101,15 +81,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateDrawerLockMode() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, GravityCompat.END)
-            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.START)
-        } else if (drawerLayout.isDrawerOpen(GravityCompat.END)) {
-            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, GravityCompat.START)
-            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.END)
-        } else {
-            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.START)
-            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.END)
+        when {
+            drawerLayout.isDrawerOpen(GravityCompat.START) -> {
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.START)
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, GravityCompat.END)
+            }
+
+            drawerLayout.isDrawerOpen(GravityCompat.END) -> {
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, GravityCompat.START)
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.END)
+            }
+
+            else -> {
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.START)
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.END)
+            }
         }
     }
 
@@ -191,15 +177,22 @@ class MainActivity : AppCompatActivity() {
     private fun setupMenuConfirmation(navView: NavigationView) {
         navView.setNavigationItemSelectedListener { menuItem ->
             val now = System.currentTimeMillis()
+            val navController = findNavController(R.id.nav_host_fragment_content_main)
+
             if (menuItem.itemId == selectedMenuItemId && (now - lastTapTime < DOUBLE_TAP_TIMEOUT)) {
                 menuItem.isChecked = true
                 drawerLayout.closeDrawers()
+
+                when (menuItem.itemId) {
+                    R.id.nav_home -> navController.navigate(R.id.nav_home)
+                    R.id.nav_about -> navController.navigate(R.id.nav_about)
+                }
+
                 true
             } else {
                 selectedMenuItemId = menuItem.itemId
                 lastTapTime = now
-                val title = menuItem.title.toString()
-                tts.speak(title, TextToSpeech.QUEUE_FLUSH, null, null)
+                tts.speak(menuItem.title.toString(), TextToSpeech.QUEUE_FLUSH, null, null)
                 false
             }
         }
