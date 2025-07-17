@@ -33,6 +33,7 @@ import android.graphics.RectF
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import android.content.res.AssetFileDescriptor
+import android.net.Uri
 import android.os.SystemClock
 import java.io.FileInputStream
 import java.nio.MappedByteBuffer
@@ -552,37 +553,38 @@ class HomeFragment : Fragment() {
     }
 
     private var lastSoundTime = 0L
-    private var lastSountLabel = ""
+    private var lastSoundLabel = ""
+
+    private val soundMap = mapOf(
+        "Farmacie" to listOf(R.raw.farmacie_detectata_1),
+        "Semn pentru statie de autobuz" to listOf(R.raw.semn_statie_1, R.raw.semn_statie_2),
+        "Semafor rosu" to listOf(R.raw.semafor_1),
+        "Semafor verde" to listOf(R.raw.semafor_2),
+        "Semn pentru trecere de pietoni" to listOf(R.raw.semn_trecere_1, R.raw.semn_trecere_2),
+        "Trecere de pietoni" to listOf(R.raw.trecere_detectata_1, R.raw.trecere_detectata_2)
+    )
 
     private fun playSoundOnDetection(label: String) {
         try {
-            if (lastSountLabel==label && SystemClock.elapsedRealtime()-lastSoundTime<20000) {
+            val now = SystemClock.elapsedRealtime()
+            if (label == lastSoundLabel && (now - lastSoundTime < 20000)) {
                 return
             }
-            lastSountLabel = label
-            lastSoundTime = SystemClock.elapsedRealtime()
+
+
+            lastSoundTime = now
+
+            val sounds = soundMap[label]
+            val soundResId = sounds?.random() ?: return
+
             detectionMediaPlayer?.reset()
-            val soundResourceId = when (label) {
-                "Farmacie" -> R.raw.farmacie_detectata_1
-                "Semn pentru statie de autobuz" -> R.raw.semn_statie_1
-                "Semafor rosu" -> R.raw.semafor_1
-                "Semafor verde" -> R.raw.semafor_2
-                "Semn pentru trecere de pietoni" -> R.raw.semn_trecere_2
-                "Trecere de pietoni" -> R.raw.trecere_detectata_2
+            val uri = Uri.parse("android.resource://${requireContext().packageName}/$soundResId")
+            detectionMediaPlayer?.setDataSource(requireContext(), uri)
+            detectionMediaPlayer?.prepare()
+            detectionMediaPlayer?.start()
 
+            Log.d("ObjectDetection", "Playing sound for $label")
 
-
-
-
-                else -> null
-            }
-
-            soundResourceId?.let {
-                detectionMediaPlayer?.setDataSource(requireContext(), android.net.Uri.parse("android.resource://${context?.packageName}/$it"))
-                detectionMediaPlayer?.prepare()
-                detectionMediaPlayer?.start()
-                Log.d("ObjectDetection", "Playing sound for $label")
-            }
         } catch (e: Exception) {
             Log.e("ObjectDetection", "Error playing sound for $label: ${e.message}", e)
         }
