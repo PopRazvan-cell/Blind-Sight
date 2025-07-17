@@ -1,11 +1,13 @@
 package com.BinarySquad.blindsight
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.view.*
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.MotionEvent
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -14,53 +16,50 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import com.BinarySquad.blindsight.databinding.ActivityMainBinding
 import com.google.android.material.navigation.NavigationView
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
-    private lateinit var binding: ActivityMainBinding
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var navView: NavigationView
+    private lateinit var settingsDrawer: NavigationView
+    private lateinit var toolbar: androidx.appcompat.widget.Toolbar
+    private lateinit var btnConnect: Button
     private lateinit var gestureDetector: GestureDetector
     private lateinit var scaleGestureDetector: ScaleGestureDetector
-    private lateinit var settingsDrawer: NavigationView
     lateinit var tts: TextToSpeech
 
     private var selectedMenuItemId: Int? = null
     private var lastTapTime = 0L
-    private val DOUBLE_TAP_TIMEOUT = 500 // milliseconds
+    private val DOUBLE_TAP_TIMEOUT = 500
 
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main) // no more view binding
 
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            WindowManager.LayoutParams.FLAG_FULLSCREEN
-        )
+        // Manual view bindings
+        drawerLayout = findViewById(R.id.drawer_layout)
+        navView = findViewById(R.id.nav_view)
+        settingsDrawer = findViewById(R.id.settings_main_drawer)
+        toolbar = findViewById(R.id.toolbar)
+        btnConnect = findViewById(R.id.btn_connect)
 
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setSupportActionBar(toolbar)
 
-        setSupportActionBar(binding.appBarMain.toolbar)
-
-        // Setup TTS
         tts = TextToSpeech(this) { status ->
             if (status == TextToSpeech.SUCCESS) {
                 tts.language = Locale.getDefault()
             }
         }
 
-        settingsDrawer = binding.settingsDrawer
-
-        // Make settings drawer full screen width
         val screenWidth = resources.displayMetrics.widthPixels
-        val params = settingsDrawer.layoutParams
-        params.width = screenWidth
-        settingsDrawer.layoutParams = params
 
-        val drawerLayout: DrawerLayout = binding.drawerLayout
-        val navView: NavigationView = binding.navView
+        settingsDrawer.layoutParams = settingsDrawer.layoutParams.apply {
+            width = screenWidth
+        }
 
         navView.layoutParams = navView.layoutParams.apply {
             width = screenWidth
@@ -70,11 +69,16 @@ class MainActivity : AppCompatActivity() {
 
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         appBarConfiguration = AppBarConfiguration(
-            setOf(R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow, R.id.nav_about),
+            setOf(R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow),
             drawerLayout
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
+
+        btnConnect.setOnClickListener {
+            tts.speak("Opening navigation drawer", TextToSpeech.QUEUE_FLUSH, null, null)
+            drawerLayout.openDrawer(GravityCompat.START)
+        }
 
         setupGestures()
         setupMenuConfirmation(navView)
@@ -85,9 +89,11 @@ class MainActivity : AppCompatActivity() {
             override fun onDrawerOpened(drawerView: View) {
                 updateDrawerLockMode()
             }
+
             override fun onDrawerClosed(drawerView: View) {
                 updateDrawerLockMode()
             }
+
             override fun onDrawerStateChanged(newState: Int) {}
         })
 
@@ -95,8 +101,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateDrawerLockMode() {
-        val drawerLayout = binding.drawerLayout
-
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, GravityCompat.END)
             drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.START)
@@ -110,11 +114,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openDrawer() {
-        binding.drawerLayout.openDrawer(GravityCompat.START)
+        drawerLayout.openDrawer(GravityCompat.START)
     }
 
     private fun openSettingsDrawer() {
-        binding.drawerLayout.openDrawer(GravityCompat.END)
+        drawerLayout.openDrawer(GravityCompat.END)
     }
 
     private fun openTutorialPanel() {
@@ -139,9 +143,8 @@ class MainActivity : AppCompatActivity() {
             private val SWIPE_VELOCITY_THRESHOLD = 100
 
             override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
-                val deltaX = (e2.x - (e1?.x ?: 0f))
-                val deltaY = (e2.y - (e1?.y ?: 0f))
-                val drawerLayout = binding.drawerLayout
+                val deltaX = e2.x - (e1?.x ?: 0f)
+                val deltaY = e2.y - (e1?.y ?: 0f)
 
                 return when {
                     kotlin.math.abs(deltaX) > kotlin.math.abs(deltaY) &&
@@ -188,17 +191,9 @@ class MainActivity : AppCompatActivity() {
     private fun setupMenuConfirmation(navView: NavigationView) {
         navView.setNavigationItemSelectedListener { menuItem ->
             val now = System.currentTimeMillis()
-            val navController = findNavController(R.id.nav_host_fragment_content_main)
-
             if (menuItem.itemId == selectedMenuItemId && (now - lastTapTime < DOUBLE_TAP_TIMEOUT)) {
                 menuItem.isChecked = true
-                binding.drawerLayout.closeDrawers()
-
-                when (menuItem.itemId) {
-                    R.id.nav_about -> navController.navigate(R.id.nav_about)
-                    else -> navController.navigate(menuItem.itemId)
-                }
-
+                drawerLayout.closeDrawers()
                 true
             } else {
                 selectedMenuItemId = menuItem.itemId

@@ -1,13 +1,10 @@
-BusStation
 Semn pentru statie de autobuz
-CAR_GreenStreetlight_Arrow
-CAR_GreenStreetlight_Circle
-CAR_RedStreetlight_Arrow
-CAR_RedStreetlight_Circle
-Crosswalk
 Trecere de pietoni
 Semn pentru trecere de pietoni
-Semafor verde pentru pietoni
-Pharmacy
+Farmacie
+Semafor verde
+Semafor rosu
+
+
 
 
