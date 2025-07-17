@@ -2,8 +2,10 @@ package com.BinarySquad.blindsight
 
 import android.annotation.SuppressLint
 import android.graphics.Color
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
+import android.util.Log
 import android.view.*
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.widget.Button
@@ -13,6 +15,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
+import com.BinarySquad.blindsight.ui.home.HomeFragment
 import com.google.android.material.navigation.NavigationView
 import java.util.*
 
@@ -31,6 +34,9 @@ class MainActivity : AppCompatActivity() {
     private var selectedMenuItemId: Int? = null
     private var lastTapTime = 0L
     private val DOUBLE_TAP_TIMEOUT = 500
+
+    // MediaPlayer pentru audio detectie (exemplu)
+    private var detectionMediaPlayer: MediaPlayer? = null
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -201,6 +207,7 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         tts.stop()
         tts.shutdown()
+        stopDetectionAudio()  // asigură oprirea sunetelor de detecție la închidere
         super.onDestroy()
     }
 
@@ -212,5 +219,44 @@ class MainActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+    }
+
+    // --- START ADĂUGARE METODE PENTRU PAUZARE/RELUARE DETECȚIE ---
+
+    private val homeFragment: HomeFragment?
+        get() = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main)
+            ?.childFragmentManager
+            ?.fragments
+            ?.firstOrNull { it is HomeFragment } as? HomeFragment
+
+    fun pauseDetection() {
+        homeFragment?.pauseDetection()
+        Log.d("MainActivity", "Detection paused")
+    }
+
+    fun resumeDetection() {
+        homeFragment?.resumeDetection()
+        Log.d("MainActivity", "Detection resumed")
+    }
+
+    // --- ADĂUGARE OPRIRE AUDIO DETECTIE ---
+    fun stopDetectionAudio() {
+        if (detectionMediaPlayer?.isPlaying == true) {
+            detectionMediaPlayer?.stop()
+            detectionMediaPlayer?.release()
+            detectionMediaPlayer = null
+            Log.d("MainActivity", "Detection audio stopped")
+        }
+    }
+
+    // --- OPȚIONAL: Funcție de start audio detectie ---
+    fun startDetectionAudio(audioResId: Int) {
+        stopDetectionAudio() // oprește ce era înainte
+        detectionMediaPlayer = MediaPlayer.create(this, audioResId)
+        detectionMediaPlayer?.setOnCompletionListener {
+            stopDetectionAudio()
+        }
+        detectionMediaPlayer?.start()
+        Log.d("MainActivity", "Detection audio started")
     }
 }

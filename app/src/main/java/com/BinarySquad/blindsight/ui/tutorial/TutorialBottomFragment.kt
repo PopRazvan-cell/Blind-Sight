@@ -1,15 +1,11 @@
 package com.BinarySquad.blindsight
 
 import android.graphics.Color
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.speech.tts.TextToSpeech
-import android.speech.tts.UtteranceProgressListener
-import android.text.Html
+import android.media.MediaPlayer
+import android.media.audiofx.LoudnessEnhancer
+import android.os.*
 import android.view.*
 import android.widget.TextView
-import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import com.BinarySquad.blindsight.databinding.FragmentTutorialBottomBinding
 
@@ -18,11 +14,12 @@ class TutorialBottomFragment : Fragment() {
     private var _binding: FragmentTutorialBottomBinding? = null
     private val binding get() = _binding!!
 
+    private var mediaPlayer: MediaPlayer? = null
     private var isPlaying = false
     private var isPaused = false
+
     private var lastTapTime = 0L
     private val doubleTapTimeout = 300L
-    private val handler = Handler(Looper.getMainLooper())
 
     private val sentences = listOf(
         "👋 Bine ai venit la Blindsight!",
@@ -37,187 +34,174 @@ class TutorialBottomFragment : Fragment() {
         "📩 Întrebări? Scrie-ne la: support@blindsight.com"
     )
 
-    private var sentenceIndex = 0
-    private var wordIndexInSentence = 0
-    private val sentenceTextViews = mutableListOf<TextView>()
-    private var tts: TextToSpeech? = null
+    private var initialY = 0f
+    private var deltaY = 0f
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    // Pentru text cuvânt cu cuvânt
+    private var currentSentenceIndex = 0
+    private var currentWordIndex = 0
+    private val handler = Handler(Looper.getMainLooper())
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentTutorialBottomBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        tts = (activity as? MainActivity)?.tts
-        setupTtsListener()
-        resetTutorial()
+        super.onViewCreated(view, savedInstanceState)
 
-        var downX = 0f
-        var downY = 0f
+        // OPRESTE detectia si orice mp3 de detectie
+        (activity as? MainActivity)?.pauseDetection()
+        (activity as? MainActivity)?.stopDetectionAudio()  // pune asta in MainActivity, trebuie să oprești mp3 detectie
 
-        binding.tutorialPanel.setOnTouchListener { _, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    downX = event.x
-                    downY = event.y
-                    true
-                }
-
-                MotionEvent.ACTION_UP -> {
-                    val deltaX = event.x - downX
-                    val deltaY = event.y - downY
-
-                    if (deltaY > 150 && kotlin.math.abs(deltaX) < 100) {
-                        parentFragmentManager.popBackStack()
-                        return@setOnTouchListener true
-                    }
-
-                    val now = System.currentTimeMillis()
-                    if (now - lastTapTime < doubleTapTimeout) {
-                        restartTutorial()
-                        lastTapTime = 0
-                    } else {
-                        if (isPlaying) pauseTutorial() else startTutorial()
-                        lastTapTime = now
-                    }
-                    true
-                }
-
-                else -> false
-            }
-        }
-
-        requireActivity().onBackPressedDispatcher.addCallback(
-            viewLifecycleOwner,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    parentFragmentManager.popBackStack()
-                }
-            }
-        )
-    }
-
-    private fun resetTutorial() {
-        isPlaying = false
-        isPaused = false
-        sentenceIndex = 0
-        wordIndexInSentence = 0
-        sentenceTextViews.clear()
         binding.tutorialTextContainer.removeAllViews()
+        binding.tutorialTextContainer.alpha = 1f
 
-        for (line in sentences) {
-            val textView = TextView(requireContext()).apply {
-                text = line
-                setTextColor(Color.parseColor("#E0FFE0"))
-                textSize = 18f
-                gravity = Gravity.CENTER
-                setPadding(16, 8, 16, 8)
-                alpha = 1f
+        // Start media player cu LoudnessEnhancer
+        mediaPlayer = MediaPlayer.create(requireContext(), R.raw.ajutor_2)
+        mediaPlayer?.setVolume(1f, 1f)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            try {
+                val enhancer = LoudnessEnhancer(mediaPlayer!!.audioSessionId)
+                enhancer.setTargetGain(1500)
+                enhancer.enabled = true
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-            sentenceTextViews.add(textView)
-            binding.tutorialTextContainer.addView(textView)
         }
-
-        handler.post {
-            binding.scrollView.fullScroll(View.FOCUS_UP)
-        }
-    }
-
-    private fun startTutorial() {
-        if (sentences.isEmpty()) return
+        mediaPlayer?.start()
         isPlaying = true
         isPaused = false
-        speakNextWord()
-    }
 
-    private fun pauseTutorial() {
-        isPlaying = false
-        isPaused = true
-        tts?.stop()
-    }
+        currentSentenceIndex = 0
+        currentWordIndex = 0
+        binding.tutorialTextContainer.removeAllViews()
 
-    private fun restartTutorial() {
-        tts?.stop()
-        resetTutorial()
-        startTutorial()
-    }
+        // Start animatie cuvânt cu cuvânt
+        showNextWord()
 
-    private fun highlightCurrentWord() {
-        if (sentenceIndex >= sentences.size) return
-
-        val sentence = sentences[sentenceIndex]
-        val words = sentence.split(" ")
-
-        if (wordIndexInSentence >= words.size) return
-
-        val highlightedSentence = words.mapIndexed { i, word ->
-            if (i == wordIndexInSentence) "<b><u>$word</u></b>" else word
-        }.joinToString(" ")
-
-        handler.post {
-            sentenceTextViews[sentenceIndex].text = Html.fromHtml(highlightedSentence, Html.FROM_HTML_MODE_LEGACY)
-
-            // Fade previous lines gradually
-            for (i in 0 until sentenceIndex) {
-                val alphaValue = 1f - 0.2f * (sentenceIndex - i) // decrease alpha for older lines
-                sentenceTextViews[i].alpha = alphaValue.coerceAtLeast(0.2f)
+        // Gesturi swipe/dublu tap / tap simplu pentru pauza/play
+        binding.tutorialPanel.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> initialY = event.rawY
+                MotionEvent.ACTION_MOVE -> {
+                    deltaY = event.rawY - initialY
+                    if (deltaY > 200 || deltaY < -200) {
+                        closeTutorial()
+                    }
+                }
+                MotionEvent.ACTION_UP -> {
+                    val currentTime = System.currentTimeMillis()
+                    if (currentTime - lastTapTime < doubleTapTimeout) {
+                        // dublu tap = restart audio și animație
+                        mediaPlayer?.seekTo(0)
+                        mediaPlayer?.start()
+                        isPlaying = true
+                        isPaused = false
+                        currentSentenceIndex = 0
+                        currentWordIndex = 0
+                        binding.tutorialTextContainer.removeAllViews()
+                        showNextWord()
+                    } else {
+                        // tap simplu = pauză / redare
+                        if (isPlaying) {
+                            pauseAudioAndAnimation()
+                        } else {
+                            resumeAudioAndAnimation()
+                        }
+                    }
+                    lastTapTime = currentTime
+                }
             }
-
-            // Ensure current line full opacity
-            sentenceTextViews[sentenceIndex].alpha = 1f
-
-            // Scroll so current sentence is visible
-            binding.scrollView.smoothScrollTo(0, sentenceTextViews[sentenceIndex].top)
+            true
         }
     }
 
-    private fun speakNextWord() {
-        if (!isPlaying || isPaused) return
-        if (sentenceIndex >= sentences.size) {
-            // Finished all sentences
+    private fun pauseAudioAndAnimation() {
+        if (isPlaying) {
+            mediaPlayer?.pause()
             isPlaying = false
-            return
+            isPaused = true
+            handler.removeCallbacksAndMessages(null)  // oprește animatia
         }
-
-        val words = sentences[sentenceIndex].split(" ")
-        if (wordIndexInSentence >= words.size) {
-            // Move to next sentence
-            sentenceIndex++
-            wordIndexInSentence = 0
-            speakNextWord()
-            return
-        }
-
-        highlightCurrentWord()
-
-        val word = words[wordIndexInSentence]
-        val params = Bundle()
-        val utteranceId = "word_${sentenceIndex}_$wordIndexInSentence"
-        tts?.speak(word, TextToSpeech.QUEUE_FLUSH, params, utteranceId)
     }
 
-    private fun setupTtsListener() {
-        tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onStart(utteranceId: String) {}
+    private fun resumeAudioAndAnimation() {
+        if (isPaused) {
+            mediaPlayer?.start()
+            isPlaying = true
+            isPaused = false
+            showNextWord() // reia animatia de unde a ramas
+        }
+    }
 
-            override fun onDone(utteranceId: String) {
-                if (!isPlaying || isPaused) return
+    // Animatie text cuvânt cu cuvânt, cu fade in pentru cuvinte noi,
+    // liniile vechi fac fade out si dispar.
+    private fun showNextWord() {
+        if (!isPlaying) return
 
-                // Increase word index after each spoken word
-                wordIndexInSentence++
-                handler.post { speakNextWord() }
+        if (currentSentenceIndex >= sentences.size) {
+            // Am terminat toate propozițiile
+            return
+        }
+
+        val words = sentences[currentSentenceIndex].split(" ")
+        if (currentWordIndex == 0) {
+            // La început de propoziție: adaug un TextView nou pentru linia curentă
+            val tv = TextView(requireContext()).apply {
+                setTextColor(Color.WHITE)
+                textSize = 18f
+                gravity = Gravity.CENTER
+                alpha = 0f
+                setPadding(16, 8, 16, 8)
             }
+            binding.tutorialTextContainer.addView(tv)
+        }
 
-            override fun onError(utteranceId: String) {}
-        })
+        val currentTextView = binding.tutorialTextContainer.getChildAt(binding.tutorialTextContainer.childCount - 1) as TextView
+
+        // Adaugă cuvântul curent în TextView curent (spațiu între cuvinte)
+        val newText = if (currentWordIndex == 0) words[currentWordIndex] else currentTextView.text.toString() + " " + words[currentWordIndex]
+        currentTextView.text = newText
+
+        // Animare fade in progresiv (opțional)
+        currentTextView.animate().alpha(1f).setDuration(300).start()
+
+        currentWordIndex++
+
+        if (currentWordIndex < words.size) {
+            // Mai avem cuvinte în propoziție
+            handler.postDelayed({ showNextWord() }, 500)
+        } else {
+            // Propoziția s-a terminat, facem fade out linia anterioară (dacă există)
+            if (binding.tutorialTextContainer.childCount > 1) {
+                val oldLine = binding.tutorialTextContainer.getChildAt(binding.tutorialTextContainer.childCount - 2)
+                oldLine.animate().alpha(0f).setDuration(1000).withEndAction {
+                    binding.tutorialTextContainer.removeView(oldLine)
+                }.start()
+            }
+            currentSentenceIndex++
+            currentWordIndex = 0
+            handler.postDelayed({ showNextWord() }, 700)
+        }
+    }
+
+    private fun closeTutorial() {
+        try {
+            handler.removeCallbacksAndMessages(null)
+            mediaPlayer?.stop()
+            mediaPlayer?.release()
+            mediaPlayer = null
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        (activity as? MainActivity)?.resumeDetection()
+        parentFragmentManager.popBackStack()
     }
 
     override fun onDestroyView() {
-        tts?.stop()
-        _binding = null
         super.onDestroyView()
+        closeTutorial()
+        _binding = null
     }
 }
