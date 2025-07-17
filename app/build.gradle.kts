@@ -1,12 +1,9 @@
-
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
 }
 
 android {
-
     namespace = "com.BinarySquad.blindsight"
     compileSdk = 35
 
@@ -19,8 +16,10 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
     buildFeatures {
-        viewBinding;true
+        viewBinding = true
+        mlModelBinding = true
     }
 
     buildTypes {
@@ -32,21 +31,18 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
-    }
-    buildFeatures {
-        viewBinding = true
-        mlModelBinding = true
     }
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -55,12 +51,13 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
+
     implementation(libs.tensorflow.lite.support)
     implementation(libs.tensorflow.lite.metadata)
     implementation(libs.tensorflow.lite.gpu)
+    implementation("org.tensorflow:tensorflow-lite:2.16.1")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
-    implementation("org.tensorflow:tensorflow-lite:2.16.1")
     androidTestImplementation(libs.androidx.espresso.core)
-
 }

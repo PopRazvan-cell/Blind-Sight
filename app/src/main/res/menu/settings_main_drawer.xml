@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/nav_about"
-        android:title="Despre Noi"
+        android:title="@string/despre_noi"
         android:icon="@drawable/ic_about_us" />
 
 </menu>

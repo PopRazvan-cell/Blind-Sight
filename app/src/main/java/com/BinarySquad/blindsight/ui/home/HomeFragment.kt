@@ -33,7 +33,6 @@ import android.graphics.RectF
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import android.content.res.AssetFileDescriptor
-import android.net.Uri
 import android.os.SystemClock
 import java.io.FileInputStream
 import java.nio.MappedByteBuffer
@@ -94,11 +93,18 @@ class HomeFragment : Fragment() {
     override fun onResume() {
         Log.d("HomeFragment", "onResume")
         super.onResume()
+
+        if (tutorialVisible) {
+            Log.d("ObjectDetection", "Tutorial is visible. Skipping model start.")
+            return
+        }
+
         try {
             Log.d("ObjectDetection", "onResume called")
             // Reset inference state
             isFirstDetection = true
             lastProcessedTime = 0L // Force immediate processing
+
             if (ContextCompat.checkSelfPermission(
                     requireContext(),
                     Manifest.permission.CAMERA
@@ -112,7 +118,11 @@ class HomeFragment : Fragment() {
                 requestPermissionLauncher.launch(Manifest.permission.CAMERA)
             }
         } catch (e: Exception) {
-            Log.e("ObjectDetection", "Error in onResume: ${e.javaClass.simpleName} - ${e.message}", e)
+            Log.e(
+                "ObjectDetection",
+                "Error in onResume: ${e.javaClass.simpleName} - ${e.message}",
+                e
+            )
             activity?.runOnUiThread {
                 Toast.makeText(context, "Startup error: ${e.message}", Toast.LENGTH_LONG).show()
             }
@@ -137,14 +147,19 @@ class HomeFragment : Fragment() {
             if (_binding == null) {
                 Log.e("ObjectDetection", "Binding is null in startCamera")
                 activity?.runOnUiThread {
-                    Toast.makeText(context, "UI binding error: Fragment view not initialized", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        context,
+                        "UI binding error: Fragment view not initialized",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
                 return
             }
             if (!isAdded || context == null) {
                 Log.e("ObjectDetection", "Fragment not attached to activity or context is null")
                 activity?.runOnUiThread {
-                    Toast.makeText(context, "Fragment not attached to activity", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "Fragment not attached to activity", Toast.LENGTH_LONG)
+                        .show()
                 }
                 return
             }
@@ -170,7 +185,11 @@ class HomeFragment : Fragment() {
             } catch (e: IllegalThreadStateException) {
                 Log.e("ObjectDetection", "Failed to start HandlerThread: ${e.message}", e)
                 activity?.runOnUiThread {
-                    Toast.makeText(context, "Thread initialization error: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        context,
+                        "Thread initialization error: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
                 return
             }
@@ -179,15 +198,20 @@ class HomeFragment : Fragment() {
             // Initialize camera manager
             Log.d("ObjectDetection", "Initializing CameraManager")
             try {
-                cameraManager = requireContext().getSystemService(Context.CAMERA_SERVICE) as CameraManager
+                cameraManager =
+                    requireContext().getSystemService(Context.CAMERA_SERVICE) as CameraManager
                 if (cameraManager.cameraIdList.isEmpty()) {
                     Log.e("ObjectDetection", "No cameras available on device")
                     activity?.runOnUiThread {
-                        Toast.makeText(context, "No cameras available on device", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, "No cameras available on device", Toast.LENGTH_LONG)
+                            .show()
                     }
                     return
                 }
-                Log.d("ObjectDetection", "Available cameras: ${cameraManager.cameraIdList.joinToString()}")
+                Log.d(
+                    "ObjectDetection",
+                    "Available cameras: ${cameraManager.cameraIdList.joinToString()}"
+                )
             } catch (e: Exception) {
                 Log.e("ObjectDetection", "Error initializing CameraManager: ${e.message}", e)
                 throw e
@@ -198,7 +222,8 @@ class HomeFragment : Fragment() {
             if (!loadModelAndLabels()) {
                 Log.e("ObjectDetection", "Failed to load model or labels")
                 activity?.runOnUiThread {
-                    Toast.makeText(context, "Failed to load model or labels", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "Failed to load model or labels", Toast.LENGTH_LONG)
+                        .show()
                 }
                 return
             }
@@ -209,31 +234,52 @@ class HomeFragment : Fragment() {
                 openCamera()
 
             }
-                binding.textureView.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
+            binding.textureView.surfaceTextureListener =
+                object : TextureView.SurfaceTextureListener {
                     @RequiresPermission(Manifest.permission.CAMERA)
-                    override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
+                    override fun onSurfaceTextureAvailable(
+                        surface: SurfaceTexture,
+                        width: Int,
+                        height: Int
+                    ) {
                         Log.d("ObjectDetection", "SurfaceTexture available, opening camera")
                         openCamera()
                     }
-                    override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {}
+
+                    override fun onSurfaceTextureSizeChanged(
+                        surface: SurfaceTexture,
+                        width: Int,
+                        height: Int
+                    ) {
+                    }
+
                     override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean = false
                     override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
                         try {
                             if (_binding == null) {
-                                Log.e("ObjectDetection", "Binding is null in onSurfaceTextureUpdated")
+                                Log.e(
+                                    "ObjectDetection",
+                                    "Binding is null in onSurfaceTextureUpdated"
+                                )
                                 return
                             }
                             if (isFirstDetection) {
                                 Log.d("ObjectDetection", "Scheduling first detection")
                                 handler.postDelayed({
                                     if (_binding == null) {
-                                        Log.e("ObjectDetection", "Binding is null during delayed detection")
+                                        Log.e(
+                                            "ObjectDetection",
+                                            "Binding is null during delayed detection"
+                                        )
                                         return@postDelayed
                                     }
                                     isFirstDetection = false
                                     val bitmap = binding.textureView.bitmap
                                     if (bitmap == null) {
-                                        Log.e("ObjectDetection", "Bitmap is null for first detection")
+                                        Log.e(
+                                            "ObjectDetection",
+                                            "Bitmap is null for first detection"
+                                        )
                                         return@postDelayed
                                     }
                                     Log.d("ObjectDetection", "Processing first detection")
@@ -245,7 +291,10 @@ class HomeFragment : Fragment() {
                                 if (currentTime - lastProcessedTime >= processingIntervalMs) {
                                     val bitmap = binding.textureView.bitmap
                                     if (bitmap == null) {
-                                        Log.e("ObjectDetection", "Bitmap is null for periodic detection")
+                                        Log.e(
+                                            "ObjectDetection",
+                                            "Bitmap is null for periodic detection"
+                                        )
                                         return
                                     }
                                     Log.d("ObjectDetection", "Processing periodic detection")
@@ -254,7 +303,11 @@ class HomeFragment : Fragment() {
                                 }
                             }
                         } catch (e: Exception) {
-                            Log.e("ObjectDetection", "Error in onSurfaceTextureUpdated: ${e.message}", e)
+                            Log.e(
+                                "ObjectDetection",
+                                "Error in onSurfaceTextureUpdated: ${e.message}",
+                                e
+                            )
                         }
                     }
                 }
@@ -262,28 +315,43 @@ class HomeFragment : Fragment() {
         } catch (e: SecurityException) {
             Log.e("ObjectDetection", "Camera permission error: ${e.message}", e)
             activity?.runOnUiThread {
-                Toast.makeText(context, "Camera permission error: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Camera permission error: ${e.message}", Toast.LENGTH_LONG)
+                    .show()
                 requestPermissionLauncher.launch(Manifest.permission.CAMERA)
             }
         } catch (e: android.hardware.camera2.CameraAccessException) {
             Log.e("ObjectDetection", "Camera access error: ${e.message}", e)
             activity?.runOnUiThread {
-                Toast.makeText(context, "Camera access error: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Camera access error: ${e.message}", Toast.LENGTH_LONG)
+                    .show()
             }
         } catch (e: IOException) {
             Log.e("ObjectDetection", "IO error in startCamera: ${e.message}", e)
             activity?.runOnUiThread {
-                Toast.makeText(context, "IO error starting camera: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "IO error starting camera: ${e.message}", Toast.LENGTH_LONG)
+                    .show()
             }
         } catch (e: NullPointerException) {
             Log.e("ObjectDetection", "Null pointer error in startCamera: ${e.message}", e)
             activity?.runOnUiThread {
-                Toast.makeText(context, "Null pointer error starting camera: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    context,
+                    "Null pointer error starting camera: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         } catch (e: Exception) {
-            Log.e("ObjectDetection", "Unexpected error in startCamera: ${e.javaClass.simpleName} - ${e.message}", e)
+            Log.e(
+                "ObjectDetection",
+                "Unexpected error in startCamera: ${e.javaClass.simpleName} - ${e.message}",
+                e
+            )
             activity?.runOnUiThread {
-                Toast.makeText(context, "Unexpected camera startup error: ${e.javaClass.simpleName} - ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    context,
+                    "Unexpected camera startup error: ${e.javaClass.simpleName} - ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }
@@ -299,59 +367,84 @@ class HomeFragment : Fragment() {
                 }
                 return
             }
-            cameraManager.openCamera(cameraManager.cameraIdList[0], object : CameraDevice.StateCallback() {
-                override fun onOpened(camera: CameraDevice) {
-                    cameraDevice = camera
-                    val surfaceTexture = binding.textureView.surfaceTexture
-                    if (surfaceTexture == null) {
-                        Log.e("ObjectDetection", "SurfaceTexture is null")
+            cameraManager.openCamera(
+                cameraManager.cameraIdList[0],
+                object : CameraDevice.StateCallback() {
+                    override fun onOpened(camera: CameraDevice) {
+                        cameraDevice = camera
+                        val surfaceTexture = binding.textureView.surfaceTexture
+                        if (surfaceTexture == null) {
+                            Log.e("ObjectDetection", "SurfaceTexture is null")
+                            camera.close()
+                            cameraDevice = null
+                            return
+                        }
+                        val surface = Surface(surfaceTexture)
+
+                        val captureRequest =
+                            cameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
+                        captureRequest.addTarget(surface)
+
+                        cameraDevice!!.createCaptureSession(
+                            listOf(surface),
+                            object : CameraCaptureSession.StateCallback() {
+                                override fun onConfigured(session: CameraCaptureSession) {
+                                    try {
+                                        session.setRepeatingRequest(
+                                            captureRequest.build(),
+                                            null,
+                                            handler
+                                        )
+                                        Log.d(
+                                            "ObjectDetection",
+                                            "Camera capture session configured"
+                                        )
+                                    } catch (e: Exception) {
+                                        Log.e(
+                                            "ObjectDetection",
+                                            "Error setting repeating request: ${e.message}",
+                                            e
+                                        )
+                                    }
+                                }
+
+                                override fun onConfigureFailed(session: CameraCaptureSession) {
+                                    activity?.runOnUiThread {
+                                        Toast.makeText(
+                                            context,
+                                            "Camera configuration failed",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                            },
+                            handler
+                        )
+                    }
+
+                    override fun onDisconnected(camera: CameraDevice) {
                         camera.close()
                         cameraDevice = null
-                        return
+                        Log.d("ObjectDetection", "Camera disconnected")
                     }
-                    val surface = Surface(surfaceTexture)
 
-                    val captureRequest = cameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
-                    captureRequest.addTarget(surface)
-
-                    cameraDevice!!.createCaptureSession(
-                        listOf(surface),
-                        object : CameraCaptureSession.StateCallback() {
-                            override fun onConfigured(session: CameraCaptureSession) {
-                                try {
-                                    session.setRepeatingRequest(captureRequest.build(), null, handler)
-                                    Log.d("ObjectDetection", "Camera capture session configured")
-                                } catch (e: Exception) {
-                                    Log.e("ObjectDetection", "Error setting repeating request: ${e.message}", e)
-                                }
-                            }
-                            override fun onConfigureFailed(session: CameraCaptureSession) {
-                                activity?.runOnUiThread {
-                                    Toast.makeText(context, "Camera configuration failed", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        },
-                        handler
-                    )
-                }
-                override fun onDisconnected(camera: CameraDevice) {
-                    camera.close()
-                    cameraDevice = null
-                    Log.d("ObjectDetection", "Camera disconnected")
-                }
-                override fun onError(camera: CameraDevice, error: Int) {
-                    camera.close()
-                    cameraDevice = null
-                    activity?.runOnUiThread {
-                        Toast.makeText(context, "Camera error: $error", Toast.LENGTH_SHORT).show()
+                    override fun onError(camera: CameraDevice, error: Int) {
+                        camera.close()
+                        cameraDevice = null
+                        activity?.runOnUiThread {
+                            Toast.makeText(context, "Camera error: $error", Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                        Log.e("ObjectDetection", "Camera error: $error")
                     }
-                    Log.e("ObjectDetection", "Camera error: $error")
-                }
-            }, handler)
+                },
+                handler
+            )
         } catch (e: Exception) {
             Log.e("ObjectDetection", "Error opening camera: ${e.message}", e)
             activity?.runOnUiThread {
-                Toast.makeText(context, "Error opening camera: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Error opening camera: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
     }
@@ -364,21 +457,24 @@ class HomeFragment : Fragment() {
             val files = assets.list("") ?: run {
                 Log.e("ObjectDetection", "Failed to access assets directory")
                 activity?.runOnUiThread {
-                    Toast.makeText(context, "Failed to access assets directory", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "Failed to access assets directory", Toast.LENGTH_LONG)
+                        .show()
                 }
                 return false
             }
             if (!files.contains(modelFile)) {
                 Log.e("ObjectDetection", "Model file $modelFile not found in assets")
                 activity?.runOnUiThread {
-                    Toast.makeText(context, "Model file $modelFile not found", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "Model file $modelFile not found", Toast.LENGTH_LONG)
+                        .show()
                 }
                 return false
             }
             if (!files.contains(labelsFile)) {
                 Log.e("ObjectDetection", "Labels file $labelsFile not found in assets")
                 activity?.runOnUiThread {
-                    Toast.makeText(context, "Labels file $labelsFile not found", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "Labels file $labelsFile not found", Toast.LENGTH_LONG)
+                        .show()
                 }
                 return false
             }
@@ -391,7 +487,8 @@ class HomeFragment : Fragment() {
             if (labels.isEmpty()) {
                 Log.e("ObjectDetection", "Labels file is empty or invalid")
                 activity?.runOnUiThread {
-                    Toast.makeText(context, "Labels file is empty or invalid", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "Labels file is empty or invalid", Toast.LENGTH_LONG)
+                        .show()
                 }
                 tflite?.close()
                 tflite = null
@@ -402,13 +499,15 @@ class HomeFragment : Fragment() {
         } catch (e: IOException) {
             Log.e("ObjectDetection", "IO error loading model or labels: ${e.message}", e)
             activity?.runOnUiThread {
-                Toast.makeText(context, "IO error loading model: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "IO error loading model: ${e.message}", Toast.LENGTH_LONG)
+                    .show()
             }
             return false
         } catch (e: Exception) {
             Log.e("ObjectDetection", "Error loading model or labels: ${e.message}", e)
             activity?.runOnUiThread {
-                Toast.makeText(context, "Error loading model: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Error loading model: ${e.message}", Toast.LENGTH_LONG)
+                    .show()
             }
             return false
         }
@@ -429,7 +528,8 @@ class HomeFragment : Fragment() {
 
     private fun loadLabels(): List<String> {
         return try {
-            requireContext().assets.open("labels.txt").bufferedReader().readLines().filter { it.isNotBlank() }
+            requireContext().assets.open("labels.txt").bufferedReader().readLines()
+                .filter { it.isNotBlank() }
         } catch (e: IOException) {
             Log.e("ObjectDetection", "Error reading labels.txt: ${e.message}", e)
             emptyList()
@@ -440,18 +540,25 @@ class HomeFragment : Fragment() {
         if (tflite == null || labels.isEmpty()) {
             Log.e("ObjectDetection", "Model or labels not initialized")
             activity?.runOnUiThread {
-                Toast.makeText(context, "Model or labels not initialized", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Model or labels not initialized", Toast.LENGTH_SHORT)
+                    .show()
             }
             return
         }
 
         try {
-            val grayscaleBitmap = Bitmap.createBitmap(inputImageSize, inputImageSize, Bitmap.Config.ARGB_8888)
+            val grayscaleBitmap =
+                Bitmap.createBitmap(inputImageSize, inputImageSize, Bitmap.Config.ARGB_8888)
             val canvas = android.graphics.Canvas(grayscaleBitmap)
             val paint = Paint().apply {
                 colorFilter = ColorMatrixColorFilter(ColorMatrix().apply { setSaturation(0f) })
             }
-            canvas.drawBitmap(bitmap, null, RectF(0f, 0f, inputImageSize.toFloat(), inputImageSize.toFloat()), paint)
+            canvas.drawBitmap(
+                bitmap,
+                null,
+                RectF(0f, 0f, inputImageSize.toFloat(), inputImageSize.toFloat()),
+                paint
+            )
 
             val inputBuffer = convertBitmapToByteBuffer(grayscaleBitmap)
             Log.d("ObjectDetection", "Input buffer size: ${inputBuffer.capacity()}")
@@ -465,8 +572,14 @@ class HomeFragment : Fragment() {
                 arrayOf(inputBuffer),
                 mapOf(0 to classOutput, 1 to bboxOutput)
             )
-            Log.d("ObjectDetection", "Model inference completed. Class output shape: [1, ${classOutput[0].size}], Class output: ${classOutput[0].joinToString()}")
-            Log.d("ObjectDetection", "Bbox output shape: [1, ${bboxOutput[0].size}], Bbox output: ${bboxOutput[0].joinToString()}")
+            Log.d(
+                "ObjectDetection",
+                "Model inference completed. Class output shape: [1, ${classOutput[0].size}], Class output: ${classOutput[0].joinToString()}"
+            )
+            Log.d(
+                "ObjectDetection",
+                "Bbox output shape: [1, ${bboxOutput[0].size}], Bbox output: ${bboxOutput[0].joinToString()}"
+            )
 
             val result = processOutput(classOutput[0], bboxOutput[0])
             Log.d(
@@ -483,14 +596,23 @@ class HomeFragment : Fragment() {
                 )
             }
         } catch (e: IllegalArgumentException) {
-            Log.e("ObjectDetection", "Shape mismatch error: ${e.message}. Check model output configuration.", e)
+            Log.e(
+                "ObjectDetection",
+                "Shape mismatch error: ${e.message}. Check model output configuration.",
+                e
+            )
             activity?.runOnUiThread {
-                Toast.makeText(context, "Model output mismatch: Check model configuration.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    context,
+                    "Model output mismatch: Check model configuration.",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         } catch (e: Exception) {
             Log.e("ObjectDetection", "Error processing image: ${e.message}", e)
             activity?.runOnUiThread {
-                Toast.makeText(context, "Image processing error: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Image processing error: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
     }
@@ -519,7 +641,10 @@ class HomeFragment : Fragment() {
     )
 
     private fun processOutput(classOutput: FloatArray, bboxOutput: FloatArray): DetectionResult {
-        Log.d("HomeFragment", "classOutput=${classOutput.contentToString()} bbox=${bboxOutput.contentToString()}")
+        Log.d(
+            "HomeFragment",
+            "classOutput=${classOutput.contentToString()} bbox=${bboxOutput.contentToString()}"
+        )
         val maxIndex = classOutput.indices.maxByOrNull { classOutput[it] } ?: 0
         val confidence = classOutput[maxIndex]
         val label = labels.getOrNull(maxIndex) ?: "Unknown"
@@ -555,36 +680,35 @@ class HomeFragment : Fragment() {
     private var lastSoundTime = 0L
     private var lastSoundLabel = ""
 
-    private val soundMap = mapOf(
-        "Farmacie" to listOf(R.raw.farmacie_detectata_1),
-        "Semn pentru statie de autobuz" to listOf(R.raw.semn_statie_1, R.raw.semn_statie_2),
-        "Semafor rosu" to listOf(R.raw.semafor_1),
-        "Semafor verde" to listOf(R.raw.semafor_2),
-        "Semn pentru trecere de pietoni" to listOf(R.raw.semn_trecere_1, R.raw.semn_trecere_2),
-        "Trecere de pietoni" to listOf(R.raw.trecere_detectata_1, R.raw.trecere_detectata_2)
-    )
-
     private fun playSoundOnDetection(label: String) {
         try {
-            val now = SystemClock.elapsedRealtime()
-            if (label == lastSoundLabel && (now - lastSoundTime < 20000)) {
+            if (lastSoundLabel == label && SystemClock.elapsedRealtime() - lastSoundTime < 20000) {
                 return
             }
-
-
-            lastSoundTime = now
-
-            val sounds = soundMap[label]
-            val soundResId = sounds?.random() ?: return
-
+            lastSoundLabel = label
+            lastSoundTime = SystemClock.elapsedRealtime()
             detectionMediaPlayer?.reset()
-            val uri = Uri.parse("android.resource://${requireContext().packageName}/$soundResId")
-            detectionMediaPlayer?.setDataSource(requireContext(), uri)
-            detectionMediaPlayer?.prepare()
-            detectionMediaPlayer?.start()
+            val soundResourceId = when (label) {
+                "Farmacie" -> R.raw.farmacie_detectata_1
+                "Semn pentru statie de autobuz" -> R.raw.semn_statie_1
+                "Semafor rosu" -> R.raw.semafor_1
+                "Semafor verde" -> R.raw.semafor_2
+                "Semn pentru trecere de pietoni" -> R.raw.semn_trecere_2
+                "Trecere de pietoni" -> R.raw.trecere_detectata_2
 
-            Log.d("ObjectDetection", "Playing sound for $label")
 
+                else -> null
+            }
+
+            soundResourceId?.let {
+                detectionMediaPlayer?.setDataSource(
+                    requireContext(),
+                    android.net.Uri.parse("android.resource://${context?.packageName}/$it")
+                )
+                detectionMediaPlayer?.prepare()
+                detectionMediaPlayer?.start()
+                Log.d("ObjectDetection", "Playing sound for $label")
+            }
         } catch (e: Exception) {
             Log.e("ObjectDetection", "Error playing sound for $label: ${e.message}", e)
         }
@@ -598,10 +722,10 @@ class HomeFragment : Fragment() {
             cameraDevice = null
             startupMediaPlayer?.stop()
             detectionMediaPlayer?.stop()
-             handlerThread.quitSafely()
+            handlerThread.quitSafely()
 
-                tflite?.close()
-                tflite = null
+            tflite?.close()
+            tflite = null
         } catch (e: Exception) {
             Log.e("ObjectDetection", "Error in onPause: ${e.message}", e)
 
@@ -627,6 +751,48 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private var tutorialVisible = false
+    private fun stopDetectionModel() {
+        try {
+            cameraDevice?.close()
+            cameraDevice = null
+            handlerThread.quitSafely()
+            tflite?.close()
+            tflite = null
+            Log.d("TutorialState", "Detection model stopped.")
+        } catch (e: Exception) {
+            Log.e("TutorialState", "Error stopping model: ${e.message}", e)
+        }
+    }
 
+    private fun resumeDetectionModel() {
+        try {
+            if (!loadModelAndLabels()) {
+                Log.e("TutorialState", "Failed to reload model and labels")
+                return
+            }
+            startCamera()
+            Log.d("TutorialState", "Detection model resumed.")
+        } catch (e: Exception) {
+            Log.e("TutorialState", "Error resuming model: ${e.message}", e)
+        }
+    }
+
+    fun pauseDetection() {
+        stopDetectionModel()
+        android.util.Log.d("HomeFragment", "Detection paused")
+    }
+
+    fun resumeDetection() {
+        resumeDetectionModel()
+        android.util.Log.d("HomeFragment", "Detection resumed")
+    }
 
 }
+
+
+
+
+
+
+

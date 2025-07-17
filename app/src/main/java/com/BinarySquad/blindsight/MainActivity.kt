@@ -1,11 +1,13 @@
 package com.BinarySquad.blindsight
 
+import android.annotation.SuppressLint
 import android.graphics.Color
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
+import android.util.Log
 import android.view.*
 import android.view.GestureDetector.SimpleOnGestureListener
-import android.view.MotionEvent
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
@@ -13,8 +15,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
-import androidx.navigation.ui.setupWithNavController
+import com.BinarySquad.blindsight.ui.home.HomeFragment
 import com.google.android.material.navigation.NavigationView
 import java.util.*
 
@@ -34,11 +35,14 @@ class MainActivity : AppCompatActivity() {
     private var lastTapTime = 0L
     private val DOUBLE_TAP_TIMEOUT = 500
 
+    // MediaPlayer pentru audio detectie (exemplu)
+    private var detectionMediaPlayer: MediaPlayer? = null
+
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main) // no more view binding
+        setContentView(R.layout.activity_main)
 
-        // Manual view bindings
         drawerLayout = findViewById(R.id.drawer_layout)
         navView = findViewById(R.id.nav_view)
         settingsDrawer = findViewById(R.id.settings_main_drawer)
@@ -54,24 +58,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         val screenWidth = resources.displayMetrics.widthPixels
-
-        settingsDrawer.layoutParams = settingsDrawer.layoutParams.apply {
-            width = screenWidth
-        }
-
-        navView.layoutParams = navView.layoutParams.apply {
-            width = screenWidth
-        }
-
+        settingsDrawer.layoutParams.width = screenWidth
+        navView.layoutParams.width = screenWidth
         drawerLayout.setScrimColor(Color.TRANSPARENT)
 
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
         appBarConfiguration = AppBarConfiguration(
-            setOf(R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow),
+            setOf(R.id.nav_home, R.id.nav_about),
             drawerLayout
         )
-        setupActionBarWithNavController(navController, appBarConfiguration)
-        navView.setupWithNavController(navController)
 
         btnConnect.setOnClickListener {
             tts.speak("Opening navigation drawer", TextToSpeech.QUEUE_FLUSH, null, null)
@@ -84,14 +78,8 @@ class MainActivity : AppCompatActivity() {
 
         drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) {}
-            override fun onDrawerOpened(drawerView: View) {
-                updateDrawerLockMode()
-            }
-
-            override fun onDrawerClosed(drawerView: View) {
-                updateDrawerLockMode()
-            }
-
+            override fun onDrawerOpened(drawerView: View) = updateDrawerLockMode()
+            override fun onDrawerClosed(drawerView: View) = updateDrawerLockMode()
             override fun onDrawerStateChanged(newState: Int) {}
         })
 
@@ -99,15 +87,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateDrawerLockMode() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, GravityCompat.END)
-            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.START)
-        } else if (drawerLayout.isDrawerOpen(GravityCompat.END)) {
-            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, GravityCompat.START)
-            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.END)
-        } else {
-            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.START)
-            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.END)
+        when {
+            drawerLayout.isDrawerOpen(GravityCompat.START) -> {
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.START)
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, GravityCompat.END)
+            }
+
+            drawerLayout.isDrawerOpen(GravityCompat.END) -> {
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, GravityCompat.START)
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.END)
+            }
+
+            else -> {
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.START)
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.END)
+            }
         }
     }
 
@@ -189,15 +183,22 @@ class MainActivity : AppCompatActivity() {
     private fun setupMenuConfirmation(navView: NavigationView) {
         navView.setNavigationItemSelectedListener { menuItem ->
             val now = System.currentTimeMillis()
+            val navController = findNavController(R.id.nav_host_fragment_content_main)
+
             if (menuItem.itemId == selectedMenuItemId && (now - lastTapTime < DOUBLE_TAP_TIMEOUT)) {
                 menuItem.isChecked = true
                 drawerLayout.closeDrawers()
+
+                when (menuItem.itemId) {
+                    R.id.nav_home -> navController.navigate(R.id.nav_home)
+                    R.id.nav_about -> navController.navigate(R.id.nav_about)
+                }
+
                 true
             } else {
                 selectedMenuItemId = menuItem.itemId
                 lastTapTime = now
-                val title = menuItem.title.toString()
-                tts.speak(title, TextToSpeech.QUEUE_FLUSH, null, null)
+                tts.speak(menuItem.title.toString(), TextToSpeech.QUEUE_FLUSH, null, null)
                 false
             }
         }
@@ -206,6 +207,7 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         tts.stop()
         tts.shutdown()
+        stopDetectionAudio()  // asigură oprirea sunetelor de detecție la închidere
         super.onDestroy()
     }
 
@@ -217,5 +219,44 @@ class MainActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+    }
+
+    // --- START ADĂUGARE METODE PENTRU PAUZARE/RELUARE DETECȚIE ---
+
+    private val homeFragment: HomeFragment?
+        get() = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main)
+            ?.childFragmentManager
+            ?.fragments
+            ?.firstOrNull { it is HomeFragment } as? HomeFragment
+
+    fun pauseDetection() {
+        homeFragment?.pauseDetection()
+        Log.d("MainActivity", "Detection paused")
+    }
+
+    fun resumeDetection() {
+        homeFragment?.resumeDetection()
+        Log.d("MainActivity", "Detection resumed")
+    }
+
+    // --- ADĂUGARE OPRIRE AUDIO DETECTIE ---
+    fun stopDetectionAudio() {
+        if (detectionMediaPlayer?.isPlaying == true) {
+            detectionMediaPlayer?.stop()
+            detectionMediaPlayer?.release()
+            detectionMediaPlayer = null
+            Log.d("MainActivity", "Detection audio stopped")
+        }
+    }
+
+    // --- OPȚIONAL: Funcție de start audio detectie ---
+    fun startDetectionAudio(audioResId: Int) {
+        stopDetectionAudio() // oprește ce era înainte
+        detectionMediaPlayer = MediaPlayer.create(this, audioResId)
+        detectionMediaPlayer?.setOnCompletionListener {
+            stopDetectionAudio()
+        }
+        detectionMediaPlayer?.start()
+        Log.d("MainActivity", "Detection audio started")
     }
 }
