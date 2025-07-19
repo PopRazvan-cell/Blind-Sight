@@ -20,16 +20,27 @@ public class AdapterBluetooth extends RecyclerView.Adapter<AdapterBluetooth.View
 
     private List<BluetoothItem> devices;
     private Context context; // Added Context field
+    private OnDeviceClickListener deviceClickListener; // Add callback interface
 
+    // Interface for device click callback
+    public interface OnDeviceClickListener {
+        void onDeviceClick(BluetoothItem device);
+    }
+    public AdapterBluetooth(List<BluetoothItem> devices, OnDeviceClickListener listener) {
+        this.devices = devices;
+        this.deviceClickListener = listener;
+    }
     // Updated constructor to include Context
     public AdapterBluetooth(List<BluetoothItem> devices) {
-        this.context = context;
+        this.deviceClickListener = null;
         this.devices = devices;
     }
+
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        this.context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         View v = inflater.inflate(R.layout.bluetooth_device, parent, false);
         return new ViewHolder(v);
@@ -43,11 +54,16 @@ public class AdapterBluetooth extends RecyclerView.Adapter<AdapterBluetooth.View
 
         // Add click listener to start ChatActivity
         holder.background.setOnClickListener(v -> {
-            Toast.makeText(context, "Selected: " + device.getName(), Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(context, ChatActivity.class);
-            intent.putExtra("DEVICE_NAME", device.getName());
-            intent.putExtra("DEVICE_ADDRESS", device.getAddress());
-            context.startActivity(intent);
+            if (deviceClickListener != null) {
+                // If we have a callback (for ultrasonic sensor connection), use it
+                deviceClickListener.onDeviceClick(device);
+            } else {
+                // Otherwise, use the original ChatActivity behavior
+                Intent intent = new Intent(context, ChatActivity.class);
+                intent.putExtra("DEVICE_NAME", device.getName());
+                intent.putExtra("DEVICE_ADDRESS", device.getAddress());
+                context.startActivity(intent);
+            }
         });
     }
 

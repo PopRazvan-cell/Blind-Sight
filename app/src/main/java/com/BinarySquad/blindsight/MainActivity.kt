@@ -9,12 +9,21 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.bluetooth.*
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.os.Vibrator
+import android.os.VibrationEffect
+import java.io.IOException
+import java.io.InputStream
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.*
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.widget.Button
 import android.widget.Toast
+import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.view.GravityCompat
@@ -42,7 +51,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnConnect: Button
     private lateinit var gestureDetector: GestureDetector
     private lateinit var scaleGestureDetector: ScaleGestureDetector
+    private lateinit var vibrator: Vibrator
+    private var bluetoothSocket: BluetoothSocket? = null
+    private var isConnected = false
+    private val handler = Handler(Looper.getMainLooper())
 
+    // UUID for SPP (Serial Port Profile) - commonly used for Arduino/sensor communication
+    private val SPP_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 
     private val TAG: String = MainActivity::class.java.simpleName
 
@@ -98,7 +113,7 @@ class MainActivity : AppCompatActivity() {
             setOf(R.id.nav_home, R.id.nav_about),
             drawerLayout
         )
-
+        vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
         btnConnect.setOnClickListener {
 
             drawerLayout.openDrawer(GravityCompat.START)
@@ -117,7 +132,7 @@ class MainActivity : AppCompatActivity() {
         })
 
         updateDrawerLockMode()
-
+        setupBluetooth()
 
         //bluetooth
         val bluetoothManager = getSystemService(
@@ -160,7 +175,195 @@ class MainActivity : AppCompatActivity() {
         }
 
         val rcv = findViewById<RecyclerView>(R.id.rcv_devices)
-        val adapterBluetooth = AdapterBluetooth(devices)
+
+        val adapterBluetooth = AdapterBluetooth(devices, object : AdapterBluetooth.OnDeviceClickListener {
+            override fun onDeviceClick(device: BluetoothItem) {
+                connectToBluetoothDevice(device)
+            }
+        })
+        rcv.adapter = adapterBluetooth
+        rcv.layoutManager = LinearLayoutManager(this)
+    }
+    private fun connectToBluetoothDevice(deviceItem: BluetoothItem) {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+
+        // Find the actual BluetoothDevice by address
+        val bluetoothDevice = bluetoothAdapter?.getRemoteDevice(deviceItem.getAddress()) // Use getter method
+        if (bluetoothDevice == null) {
+            Toast.makeText(this, "Device not found", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Disconnect if already connected
+        if (isConnected) {
+            disconnectBluetoothDevice()
+        }
+
+        Thread {
+            try {
+                bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(SPP_UUID)
+                bluetoothSocket?.connect()
+
+                runOnUiThread {
+                    Toast.makeText(this, "Connected to ${deviceItem.getName()}", Toast.LENGTH_SHORT).show() // Use getter method
+                    isConnected = true
+                    startListeningForUltrasonicData()
+
+                    // Close the drawer after successful connection
+                    drawerLayout.closeDrawer(GravityCompat.START)
+                }
+
+            } catch (e: IOException) {
+                Log.e(TAG, "Could not connect to device", e)
+                runOnUiThread {
+                    Toast.makeText(this, "Connection failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+                try {
+                    bluetoothSocket?.close()
+                } catch (closeException: IOException) {
+                    Log.e(TAG, "Could not close socket", closeException)
+                }
+            }
+        }.start()
+    }
+    private fun startListeningForUltrasonicData() {
+        Thread {
+            val buffer = ByteArray(1024)
+            var bytes: Int
+            val inputStream: InputStream = bluetoothSocket?.inputStream ?: return@Thread
+
+            while (isConnected) {
+                try {
+                    bytes = inputStream.read(buffer)
+                    val receivedData = String(buffer, 0, bytes).trim()
+
+                    Log.d(TAG, "Received raw ultrasonic distance: $receivedData")
+                    try {
+                        val distance = receivedData.substringAfter(':').toFloat()
+
+                        Log.d(TAG, "Received ultrasonic distance: $distance cm")
+
+                        // Check if distance is below threshold
+                        if (distance < 50.0f) {
+                            runOnUiThread {
+                                triggerProximityAlert(distance)
+                            }
+                        }
+
+                    } catch (e: NumberFormatException) {
+                        Log.w(TAG, "Could not parse distance data: $receivedData")
+                    }
+
+                } catch (e: IOException) {
+                    Log.e(TAG, "Error reading from Bluetooth socket", e)
+                    runOnUiThread {
+                        Toast.makeText(this@MainActivity, "Connection lost", Toast.LENGTH_SHORT).show()
+                    }
+                    break
+                }
+            }
+        }.start()
+    }
+    // NEW METHOD: Trigger device vibration
+
+
+
+    @RequiresPermission(Manifest.permission.VIBRATE)
+    private fun triggerProximityAlert(distance: Float) {
+        // Trigger vibration
+        triggerVibration()
+
+        // Show toast notification
+        Toast.makeText(
+            this,
+            "distance ${String.format("%.1f", distance)} cm!",
+            Toast.LENGTH_SHORT
+        ).show()
+
+        // Optional: Use TTS to announce the alert
+        if (::tts.isInitialized) {
+            tts.speak(
+                "distance ${String.format("%.0f", distance)} centimeters",
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                null
+            )
+        }
+
+        // Optional: Play alert sound using your existing detection audio system
+        startDetectionAudio(R.raw.acasa) // Replace with appropriate alert sound
+    }
+
+    // NEW METHOD: Trigger device vibration
+    @RequiresPermission(Manifest.permission.VIBRATE)
+    private fun triggerVibration() {
+        if (vibrator.hasVibrator()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                // For API 26 and above
+                val vibrationEffect = VibrationEffect.createOneShot(5000, VibrationEffect.DEFAULT_AMPLITUDE)
+                vibrator.vibrate(vibrationEffect)
+            } else {
+                // For older versions
+                @Suppress("DEPRECATION")
+                vibrator.vibrate(5000)
+            }
+            Log.d(TAG, "Vibration triggered for 5 seconds")
+        }
+    }
+
+    // NEW METHOD: Disconnect Bluetooth device
+    private fun disconnectBluetoothDevice() {
+        isConnected = false
+        try {
+            bluetoothSocket?.close()
+            Toast.makeText(this, "Bluetooth disconnected", Toast.LENGTH_SHORT).show()
+        } catch (e: IOException) {
+            Log.e(TAG, "Could not close Bluetooth socket", e)
+        }
+    }
+    private fun setupBluetooth() {
+        val bluetoothManager = getSystemService(BluetoothManager::class.java)
+        checkNotNull(bluetoothManager)
+        bluetoothAdapter = bluetoothManager.adapter
+
+        if (bluetoothAdapter == null) {
+            Log.e(TAG, "Device doesn't support bluetooth!")
+            return
+        }
+
+        val adapter = bluetoothAdapter
+        if (adapter != null && !adapter.isEnabled) {
+            val btIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            if (ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                return
+            }
+        } else {
+            initDevices()
+        }
+
+        if (devices != null) {
+            Toast.makeText(
+                this,
+                String.format("Found %d devices", devices.size),
+                Toast.LENGTH_LONG
+            ).show()
+        }
+
+        val rcv = findViewById<RecyclerView>(R.id.rcv_devices)
+        // UPDATED: Add click listener to adapter
+        val adapterBluetooth = AdapterBluetooth(devices) { device ->
+            connectToBluetoothDevice(device)
+        }
         rcv.adapter = adapterBluetooth
         rcv.layoutManager = LinearLayoutManager(this)
     }
