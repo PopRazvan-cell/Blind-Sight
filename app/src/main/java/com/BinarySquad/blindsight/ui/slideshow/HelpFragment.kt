@@ -32,7 +32,7 @@ class HelpFragment : Fragment() {
     private fun playHelpAudio() {
         // Clean up any existing MediaPlayer
         mediaPlayer?.release()
-        mediaPlayer = MediaPlayer.create(context, R.raw.ajutor_2)
+        mediaPlayer = MediaPlayer.create(context, R.raw.intro2)
         try {
             mediaPlayer?.start()
             Log.d("HelpFragment", "Help audio played")

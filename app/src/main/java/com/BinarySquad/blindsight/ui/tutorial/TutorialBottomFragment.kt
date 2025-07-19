@@ -22,16 +22,23 @@ class TutorialBottomFragment : Fragment() {
     private val doubleTapTimeout = 300L
 
     private val sentences = listOf(
-        "👋 Bine ai venit la Blindsight!",
-        "🔍 Cum funcționează aplicația?",
-        "✅ Apasă „Deschide Camera” din meniul principal.",
-        "✅ Ține telefonul spre obiectul dorit.",
-        "✅ Vei primi o descriere audio a ceea ce se vede.",
-        "🎤 Asigură-te că:",
-        "- Volumul este activ.",
-        "- Ai dat permisiune la cameră.",
-        "- Ții camera nemișcată pentru rezultate clare.",
-        "📩 Întrebări? Scrie-ne la: support@blindsight.com"
+        "👋 Bun venit la Blindsight, aplicația care te ajută să identifici obiectele din jur prin descrieri audio.",
+        "🔍 Pentru a folosi aplicația, ține camera telefonului îndreptată spre obiectul pe care vrei să-l detectezi.",
+        "Aplicația va analiza imaginea și îți va oferi o descriere audio a obiectului detectat.?",
+        "✅ Pentru a deschide tutorialul audio în orice moment, fă un swipe în sus pe ecran.",
+        "Pentru a închide tutorialul, fă un swipe în jos.",
+        "✅ Apasă o dată pe ecran pentru a pune pauză sau pentru a relua tutorialul audio.",
+        "Dacă faci dublu tap, tutorialul va reporni de la început.",
+        "✅ Dacă faci swipe de la stânga la dreapta, se va deschide meniul principal.",
+        "Swipe-ul de la dreapta la stânga va închide meniul.",
+        "🎤Pentru setări, fă swipe în direcția opusă: swipe de la dreapta la stânga pentru a deschide setările, ",
+        "iar swipe de la stânga la dreapta pentru a le închide.",
+        "Pentru a auzi o descriere audio a unui buton din aplicație, atinge-l o singură dată.",
+        "Pentru a activa funcția butonului, dă dublu tap pe el.",
+        "Asigură-te că volumul este activ și că ai dat permisiunile necesare pentru cameră. ",
+        "De asemenea, ține telefonul nemișcat pentru o detectare mai precisă.",
+        "📩 Dacă ai întrebări sau ai nevoie de asistență, ne poți contacta la adresa de email blindsight2025@gmail.com",
+        "Mulțumim că folosești Blindsight!"
     )
 
     private var initialY = 0f
@@ -58,7 +65,7 @@ class TutorialBottomFragment : Fragment() {
         binding.tutorialTextContainer.alpha = 1f
 
         // Start media player cu LoudnessEnhancer
-        mediaPlayer = MediaPlayer.create(requireContext(), R.raw.ajutor_2)
+        mediaPlayer = MediaPlayer.create(requireContext(), R.raw.intro2)
         mediaPlayer?.setVolume(1f, 1f)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             try {

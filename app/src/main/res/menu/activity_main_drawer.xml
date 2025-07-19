@@ -11,8 +11,11 @@
             android:textColor="@color/white" />
     </group>
 
+
+
     <!-- Email at the bottom is now handled by footer layout, so no need for empty separators -->
 
 
 
 </menu>
+

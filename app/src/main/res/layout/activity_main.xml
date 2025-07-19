@@ -24,7 +24,27 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 android:background="@color/dark_blue1"
-                app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+
+
+                <Button
+                    android:id="@+id/btn_connect"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end|center_vertical"
+                    android:text="Connect"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="10dp"
+                    android:layout_marginEnd="16dp"
+                    android:backgroundTint="@color/cyan_accent"
+                    android:elevation="6dp" />
+
+            </androidx.appcompat.widget.Toolbar>
+
         </com.google.android.material.appbar.AppBarLayout>
 
         <!-- 🧩 Fragmentul principal controlat de Navigation -->
@@ -33,23 +53,11 @@
             android:name="androidx.navigation.fragment.NavHostFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:navGraph="@navigation/mobile_navigation"
+            android:layout_marginTop="?attr/actionBarSize"
             app:defaultNavHost="true"
-            android:layout_marginTop="?attr/actionBarSize" />
+            app:navGraph="@navigation/mobile_navigation" />
 
         <!-- 🔘 Buton Connect -->
-        <Button
-            android:id="@+id/btn_connect"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Connect"
-            android:backgroundTint="@color/dark_blue1"
-            android:textColor="@color/white"
-            android:layout_margin="16dp"
-            android:layout_gravity="top|start"
-            android:translationZ="8dp"
-            app:layout_anchor="@id/toolbar"
-            app:layout_anchorGravity="bottom" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <!-- 📑 Drawer din stânga (meniu principal) -->
@@ -63,7 +71,9 @@
         app:itemTextColor="@color/white"
         app:itemIconTint="@color/white"
         app:menu="@menu/activity_main_drawer"
-        app:headerLayout="@layout/menu_header" />
+        app:headerLayout="@layout/menu_header"
+        />
+
 
     <!-- ⚙️ Drawer din dreapta (Settings) -->
     <com.google.android.material.navigation.NavigationView

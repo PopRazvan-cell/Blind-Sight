@@ -1,6 +1,11 @@
 package com.BinarySquad.blindsight
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.media.MediaPlayer
 import android.os.Bundle
@@ -9,15 +14,23 @@ import android.util.Log
 import android.view.*
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.widget.Button
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.BinarySquad.blindsight.ui.bluetooth.AdapterBluetooth
+import com.BinarySquad.blindsight.ui.bluetooth.BluetoothActivity
+import com.BinarySquad.blindsight.ui.bluetooth.BluetoothItem
 import com.BinarySquad.blindsight.ui.home.HomeFragment
 import com.google.android.material.navigation.NavigationView
 import java.util.*
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -29,13 +42,24 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnConnect: Button
     private lateinit var gestureDetector: GestureDetector
     private lateinit var scaleGestureDetector: ScaleGestureDetector
+
+
+    private val TAG: String = MainActivity::class.java.simpleName
+
+    private var bluetoothAdapter: BluetoothAdapter? = null
+    private val REQUEST_ENABLE_BT: Int = 1
+    //private val devices: List<BluetoothItem>? = null
+    val devices = mutableListOf<BluetoothItem>()
+    private val REQUEST_BLUETOOTH_PERMISSION = 1
+
+
     lateinit var tts: TextToSpeech
 
     private var selectedMenuItemId: Int? = null
     private var lastTapTime = 0L
     private val DOUBLE_TAP_TIMEOUT = 500
 
-    // MediaPlayer pentru audio detectie (exemplu)
+    //MediaPlayer pentru audio detectie (exemplu)
     private var detectionMediaPlayer: MediaPlayer? = null
 
     @SuppressLint("MissingInflatedId")
@@ -43,11 +67,19 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+
+
         drawerLayout = findViewById(R.id.drawer_layout)
         navView = findViewById(R.id.nav_view)
         settingsDrawer = findViewById(R.id.settings_main_drawer)
         toolbar = findViewById(R.id.toolbar)
         btnConnect = findViewById(R.id.btn_connect)
+
+        //bluetooth
+        val customView = layoutInflater.inflate(R.layout.blue_layout, navView, false)
+        navView.addView(customView,1)
+
+
 
         setSupportActionBar(toolbar)
 
@@ -68,8 +100,9 @@ class MainActivity : AppCompatActivity() {
         )
 
         btnConnect.setOnClickListener {
-            tts.speak("Opening navigation drawer", TextToSpeech.QUEUE_FLUSH, null, null)
+
             drawerLayout.openDrawer(GravityCompat.START)
+
         }
 
         setupGestures()
@@ -84,6 +117,52 @@ class MainActivity : AppCompatActivity() {
         })
 
         updateDrawerLockMode()
+
+
+        //bluetooth
+        val bluetoothManager = getSystemService(
+            BluetoothManager::class.java
+        )
+        checkNotNull(bluetoothManager)
+        bluetoothAdapter = bluetoothManager.adapter
+        if (bluetoothAdapter == null) {
+            Log.e(TAG, "Device doesn't support bluetooth!")
+        }
+
+        val adapter = bluetoothAdapter
+        if (adapter != null && !adapter.isEnabled) {
+            val btIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            if (ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return
+            }
+            //startActivityForResult(btIntent, MainActivity.REQUEST_ENABLE_BT)
+        } else {
+            initDevices()
+        }
+
+        if (devices != null) {
+            Toast.makeText(
+                this,
+                String.format("Found %d devices", devices.size),
+                Toast.LENGTH_LONG
+            ).show()
+        }
+
+        val rcv = findViewById<RecyclerView>(R.id.rcv_devices)
+        val adapterBluetooth = AdapterBluetooth(devices)
+        rcv.adapter = adapterBluetooth
+        rcv.layoutManager = LinearLayoutManager(this)
     }
 
     private fun updateDrawerLockMode() {
@@ -179,6 +258,7 @@ class MainActivity : AppCompatActivity() {
         scaleGestureDetector.onTouchEvent(ev)
         return super.dispatchTouchEvent(ev)
     }
+    private var menuMediaPlayer: MediaPlayer? = null
 
     private fun setupMenuConfirmation(navView: NavigationView) {
         navView.setNavigationItemSelectedListener { menuItem ->
@@ -198,7 +278,22 @@ class MainActivity : AppCompatActivity() {
             } else {
                 selectedMenuItemId = menuItem.itemId
                 lastTapTime = now
-                tts.speak(menuItem.title.toString(), TextToSpeech.QUEUE_FLUSH, null, null)
+
+                // Release previous media player if playing
+                menuMediaPlayer?.release()
+                menuMediaPlayer = null
+
+                val soundResId = when (menuItem.itemId) {
+                    R.id.nav_home -> R.raw.acasa
+                    R.id.nav_about -> R.raw.despre_noi
+                    else -> null
+                }
+
+                soundResId?.let {
+                    menuMediaPlayer = MediaPlayer.create(this, it)
+                    menuMediaPlayer?.start()
+                }
+
                 false
             }
         }
@@ -258,5 +353,57 @@ class MainActivity : AppCompatActivity() {
         }
         detectionMediaPlayer?.start()
         Log.d("MainActivity", "Detection audio started")
+    }
+
+
+    //bluetooth
+    protected fun initDevices() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.BLUETOOTH_CONNECT),
+                REQUEST_BLUETOOTH_PERMISSION
+            )
+            return
+        }
+        val pairedDevices = bluetoothAdapter!!.bondedDevices
+
+        Log.d(TAG, "Paired device found: ${pairedDevices.size} ")
+        if (pairedDevices.size > 0) {
+            for (device in pairedDevices) {
+                val deviceName = device.name
+                val deviceHardwareAddress = device.address
+                Log.d(TAG, "Paired device found: ${device.name} @ ${device.address}")
+                Log.i(
+                    TAG, String.format(
+                        "Device name: %s; Device Address: %s",
+                        deviceName, deviceHardwareAddress
+                    )
+                )
+
+                devices.add(BluetoothItem(deviceName, deviceHardwareAddress))
+                Log.d(TAG, "Paired device found: ${devices.size} ")
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        try {
+            super.onActivityResult(requestCode, resultCode, data)
+
+            if (requestCode == REQUEST_ENABLE_BT && resultCode == RESULT_OK) {
+                initDevices()
+            }
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+            Toast.makeText(
+                this, ex.toString(),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 }

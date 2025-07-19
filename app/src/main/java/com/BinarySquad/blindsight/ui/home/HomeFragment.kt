@@ -53,7 +53,7 @@ class HomeFragment : Fragment() {
     private val inputImageSize = 48
     private var labels: List<String> = emptyList()
     private var lastProcessedTime = 0L
-    private val processingIntervalMs = 3000L
+    private val processingIntervalMs = 5000L
     private val binding get() = _binding!!
     private val confidenceThreshold = 0.9f
     private var detectionMediaPlayer: MediaPlayer? = null
@@ -685,30 +685,33 @@ class HomeFragment : Fragment() {
             if (lastSoundLabel == label && SystemClock.elapsedRealtime() - lastSoundTime < 20000) {
                 return
             }
+
             lastSoundLabel = label
             lastSoundTime = SystemClock.elapsedRealtime()
             detectionMediaPlayer?.reset()
-            val soundResourceId = when (label) {
-                "Farmacie" -> R.raw.farmacie_detectata_1
-                "Semn pentru statie de autobuz" -> R.raw.semn_statie_1
-                "Semafor rosu" -> R.raw.semafor_1
-                "Semafor verde" -> R.raw.semafor_2
-                "Semn pentru trecere de pietoni" -> R.raw.semn_trecere_2
-                "Trecere de pietoni" -> R.raw.trecere_detectata_2
 
-
+            val soundResourceOptions = when (label) {
+                "Farmacie" -> listOf(R.raw.farmacie1, R.raw.farmacie2, R.raw.farmacie3)
+                "Semn pentru statie de autobuz" -> listOf(R.raw.semn_statie_bus1, R.raw.semn_statie_bus2)
+                "Semafor rosu" -> listOf(R.raw.semafor_rosu1, R.raw.semafor_rosu2, R.raw.semafor_rosu3)
+                "Semafor verde" -> listOf(R.raw.semafor_verde1, R.raw.semafor_verde2, R.raw.semafor_verde3)
+                "Semn pentru trecere de pietoni" -> listOf(R.raw.semn_trecere_de_pietoni1, R.raw.semn_trecere_de_pietoni2, R.raw.semn_trecere_de_pietoni3)
+                "Trecere de pietoni" -> listOf(R.raw.trecere1, R.raw.trecere2, R.raw.trecere3)
                 else -> null
             }
 
-            soundResourceId?.let {
+            val selectedSoundRes = soundResourceOptions?.random()
+
+            selectedSoundRes?.let {
                 detectionMediaPlayer?.setDataSource(
                     requireContext(),
                     android.net.Uri.parse("android.resource://${context?.packageName}/$it")
                 )
                 detectionMediaPlayer?.prepare()
                 detectionMediaPlayer?.start()
-                Log.d("ObjectDetection", "Playing sound for $label")
+                Log.d("ObjectDetection", "Playing random sound for $label")
             }
+
         } catch (e: Exception) {
             Log.e("ObjectDetection", "Error playing sound for $label: ${e.message}", e)
         }
@@ -789,8 +792,6 @@ class HomeFragment : Fragment() {
     }
 
 }
-
-
 
 
 
