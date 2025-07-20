@@ -53,7 +53,7 @@ class HomeFragment : Fragment() {
     private val inputImageSize = 48
     private var labels: List<String> = emptyList()
     private var lastProcessedTime = 0L
-    private val processingIntervalMs = 5000L
+    private val processingIntervalMs = 2500L
     private val binding get() = _binding!!
     private val confidenceThreshold = 0.9f
     private var detectionMediaPlayer: MediaPlayer? = null

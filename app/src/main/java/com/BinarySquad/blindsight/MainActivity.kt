@@ -297,7 +297,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Optional: Play alert sound using your existing detection audio system
-        startDetectionAudio(R.raw.acasa) // Replace with appropriate alert sound
+        //startDetectionAudio(R.raw.acasa) // Replace with appropriate alert sound
     }
 
     // NEW METHOD: Trigger device vibration

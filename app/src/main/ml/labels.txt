@@ -1,7 +1,7 @@
 Semn pentru statie de autobuz
 Trecere de pietoni
-Semn pentru trecere de pietoni
 Farmacie
+Semn pentru trecere de pietoni
 Semafor verde
 Semafor rosu
 
