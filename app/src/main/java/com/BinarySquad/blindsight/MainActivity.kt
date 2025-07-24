@@ -61,20 +61,20 @@ class MainActivity : AppCompatActivity() {
 
     private val TAG: String = MainActivity::class.java.simpleName
 
+    // Declarare bluetooth
     private var bluetoothAdapter: BluetoothAdapter? = null
     private val REQUEST_ENABLE_BT: Int = 1
-    //private val devices: List<BluetoothItem>? = null
     val devices = mutableListOf<BluetoothItem>()
     private val REQUEST_BLUETOOTH_PERMISSION = 1
 
-
+    // Declarare text to speech
     lateinit var tts: TextToSpeech
 
     private var selectedMenuItemId: Int? = null
     private var lastTapTime = 0L
     private val DOUBLE_TAP_TIMEOUT = 500
 
-    //MediaPlayer pentru audio detectie (exemplu)
+    //MediaPlayer pentru audio detectie
     private var detectionMediaPlayer: MediaPlayer? = null
 
     @SuppressLint("MissingInflatedId")
@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
         toolbar = findViewById(R.id.toolbar)
         btnConnect = findViewById(R.id.btn_connect)
 
-        //bluetooth
+        // Declarare UI bluetooth
         val customView = layoutInflater.inflate(R.layout.blue_layout, navView, false)
         navView.addView(customView,1)
 
@@ -134,7 +134,7 @@ class MainActivity : AppCompatActivity() {
         updateDrawerLockMode()
         setupBluetooth()
 
-        //bluetooth
+        // Initializare bluetooth
         val bluetoothManager = getSystemService(
             BluetoothManager::class.java
         )
@@ -152,18 +152,11 @@ class MainActivity : AppCompatActivity() {
                     Manifest.permission.BLUETOOTH_CONNECT
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
                 return
             }
             //startActivityForResult(btIntent, MainActivity.REQUEST_ENABLE_BT)
         } else {
-            initDevices()
+            //initDevices()
         }
 
         if (devices != null) {
@@ -176,6 +169,7 @@ class MainActivity : AppCompatActivity() {
 
         val rcv = findViewById<RecyclerView>(R.id.rcv_devices)
 
+        // Conectare la device-ul bluetooth selectat
         val adapterBluetooth = AdapterBluetooth(devices, object : AdapterBluetooth.OnDeviceClickListener {
             override fun onDeviceClick(device: BluetoothItem) {
                 connectToBluetoothDevice(device)
@@ -193,18 +187,19 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        // Find the actual BluetoothDevice by address
+        // Gaseste device-ul Bluetooth dupa address
         val bluetoothDevice = bluetoothAdapter?.getRemoteDevice(deviceItem.getAddress()) // Use getter method
         if (bluetoothDevice == null) {
             Toast.makeText(this, "Device not found", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Disconnect if already connected
+        // Deconecteaza device-ul daca este deja conectat
         if (isConnected) {
             disconnectBluetoothDevice()
         }
 
+        // Daca exista un device conectat porneste ascultarea datelor trimise
         Thread {
             try {
                 bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(SPP_UUID)
@@ -215,7 +210,6 @@ class MainActivity : AppCompatActivity() {
                     isConnected = true
                     startListeningForUltrasonicData()
 
-                    // Close the drawer after successful connection
                     drawerLayout.closeDrawer(GravityCompat.START)
                 }
 
@@ -232,6 +226,8 @@ class MainActivity : AppCompatActivity() {
             }
         }.start()
     }
+
+    // Asculta device-ul bluetooth dupa datele trimise de senzorul ultrasonic
     private fun startListeningForUltrasonicData() {
         Thread {
             val buffer = ByteArray(1024)
@@ -249,7 +245,7 @@ class MainActivity : AppCompatActivity() {
 
                         Log.d(TAG, "Received ultrasonic distance: $distance cm")
 
-                        // Check if distance is below threshold
+                        // Verifica daca distanta este sub 50cm
                         if (distance < 50.0f) {
                             runOnUiThread {
                                 triggerProximityAlert(distance)
@@ -270,23 +266,21 @@ class MainActivity : AppCompatActivity() {
             }
         }.start()
     }
-    // NEW METHOD: Trigger device vibration
 
-
-
+    // Porneste vibra telefonului
     @RequiresPermission(Manifest.permission.VIBRATE)
     private fun triggerProximityAlert(distance: Float) {
-        // Trigger vibration
+        // Vibreaza 5 secunde
         triggerVibration()
 
-        // Show toast notification
+        // Arata o notificare cu distanta detectata
         Toast.makeText(
             this,
             "distance ${String.format("%.1f", distance)} cm!",
             Toast.LENGTH_SHORT
         ).show()
 
-        // Optional: Use TTS to announce the alert
+        // Folosteste text to speech pentru a notifica verbal utilizatorul
         if (::tts.isInitialized) {
             tts.speak(
                 "distance ${String.format("%.0f", distance)} centimeters",
@@ -296,20 +290,20 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
-        // Optional: Play alert sound using your existing detection audio system
-        //startDetectionAudio(R.raw.acasa) // Replace with appropriate alert sound
+
+        //startDetectionAudio(R.raw.acasa)
     }
 
-    // NEW METHOD: Trigger device vibration
+    // Porneste vibra telefonului pentru 5 secunde
     @RequiresPermission(Manifest.permission.VIBRATE)
     private fun triggerVibration() {
         if (vibrator.hasVibrator()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                // For API 26 and above
+
                 val vibrationEffect = VibrationEffect.createOneShot(5000, VibrationEffect.DEFAULT_AMPLITUDE)
                 vibrator.vibrate(vibrationEffect)
             } else {
-                // For older versions
+
                 @Suppress("DEPRECATION")
                 vibrator.vibrate(5000)
             }
@@ -317,7 +311,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // NEW METHOD: Disconnect Bluetooth device
+    // Deconecteaza device-ul bluetooth
     private fun disconnectBluetoothDevice() {
         isConnected = false
         try {
@@ -360,7 +354,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         val rcv = findViewById<RecyclerView>(R.id.rcv_devices)
-        // UPDATED: Add click listener to adapter
         val adapterBluetooth = AdapterBluetooth(devices) { device ->
             connectToBluetoothDevice(device)
         }
@@ -559,7 +552,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    //bluetooth
+    // Initializare device-uri bluetooth
     protected fun initDevices() {
         if (ActivityCompat.checkSelfPermission(
                 this,

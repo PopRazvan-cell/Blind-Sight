@@ -58,8 +58,9 @@ class HomeFragment : Fragment() {
     private val confidenceThreshold = 0.9f
     private var detectionMediaPlayer: MediaPlayer? = null
     private var startupMediaPlayer: MediaPlayer? = null
-    private var isFirstDetection = true // Moved to class scope to reset on resume
+    private var isFirstDetection = true
 
+    // Cere permisiuni pentru camera
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -101,9 +102,9 @@ class HomeFragment : Fragment() {
 
         try {
             Log.d("ObjectDetection", "onResume called")
-            // Reset inference state
+            // Daca e prima inferenta forteaza pornirea ei
             isFirstDetection = true
-            lastProcessedTime = 0L // Force immediate processing
+            lastProcessedTime = 0L // Forteaza inferenta
 
             if (ContextCompat.checkSelfPermission(
                     requireContext(),
@@ -129,7 +130,7 @@ class HomeFragment : Fragment() {
         }
     }
 
-
+    // Reda un sunet la pornirea aplicatiei
     private fun playStartupSound() {
         try {
             startupMediaPlayer?.release()
@@ -143,7 +144,7 @@ class HomeFragment : Fragment() {
 
     private fun startCamera() {
         try {
-            // Verify context and binding
+
             if (_binding == null) {
                 Log.e("ObjectDetection", "Binding is null in startCamera")
                 activity?.runOnUiThread {
@@ -164,7 +165,7 @@ class HomeFragment : Fragment() {
                 return
             }
 
-            // Clean up existing resources
+            // Curata resursele
             Log.d("ObjectDetection", "Cleaning up existing resources")
             try {
                 cameraDevice?.close()
@@ -177,7 +178,7 @@ class HomeFragment : Fragment() {
                 Log.e("ObjectDetection", "Error cleaning up resources: ${e.message}", e)
             }
 
-            // Initialize handler thread
+            // Initializare handler thread
             Log.d("ObjectDetection", "Initializing HandlerThread")
             handlerThread = HandlerThread("CameraThread")
             try {
@@ -195,7 +196,7 @@ class HomeFragment : Fragment() {
             }
             handler = Handler(handlerThread.looper)
 
-            // Initialize camera manager
+            // Initializare camera manager
             Log.d("ObjectDetection", "Initializing CameraManager")
             try {
                 cameraManager =
@@ -217,7 +218,7 @@ class HomeFragment : Fragment() {
                 throw e
             }
 
-            // Load model and labels
+            // Incarca modele si labels
             Log.d("ObjectDetection", "Loading model and labels")
             if (!loadModelAndLabels()) {
                 Log.e("ObjectDetection", "Failed to load model or labels")
@@ -356,6 +357,7 @@ class HomeFragment : Fragment() {
         }
     }
 
+    // Initializare camera
     @RequiresPermission(Manifest.permission.CAMERA)
     @SuppressLint("MissingPermission")
     private fun openCamera() {
@@ -449,6 +451,7 @@ class HomeFragment : Fragment() {
         }
     }
 
+    // Initializare modele si labels
     private fun loadModelAndLabels(): Boolean {
         try {
             val assets = requireContext().assets
@@ -536,6 +539,7 @@ class HomeFragment : Fragment() {
         }
     }
 
+    // Proceseaza imaginea
     private fun processImageForObjectDetection(bitmap: Bitmap) {
         if (tflite == null || labels.isEmpty()) {
             Log.e("ObjectDetection", "Model or labels not initialized")
@@ -563,11 +567,11 @@ class HomeFragment : Fragment() {
             val inputBuffer = convertBitmapToByteBuffer(grayscaleBitmap)
             Log.d("ObjectDetection", "Input buffer size: ${inputBuffer.capacity()}")
 
-            // Initialize outputs based on expected model structure
+            // Initializare outputs bazata pe structura modelului
             val classOutput = Array(1) { FloatArray(6) } // 6 classes
             val bboxOutput = Array(1) { FloatArray(4) }  // x, y, width, height
 
-            // Run inference with two outputs
+            // Pornire inferenta
             tflite!!.runForMultipleInputsOutputs(
                 arrayOf(inputBuffer),
                 mapOf(0 to classOutput, 1 to bboxOutput)
@@ -617,7 +621,7 @@ class HomeFragment : Fragment() {
         }
     }
 
-
+    // Converteste bitmap in buffer
     private fun convertBitmapToByteBuffer(bitmap: Bitmap): ByteBuffer {
         val byteBuffer = ByteBuffer.allocateDirect(4 * inputImageSize * inputImageSize * 1)
         byteBuffer.order(ByteOrder.nativeOrder())
@@ -640,6 +644,7 @@ class HomeFragment : Fragment() {
         val boundingBox: RectF
     )
 
+    // Calcul output inferenta: numele clasei si pozitia boxului
     private fun processOutput(classOutput: FloatArray, bboxOutput: FloatArray): DetectionResult {
         Log.d(
             "HomeFragment",
@@ -662,6 +667,7 @@ class HomeFragment : Fragment() {
         return DetectionResult(label, confidence, boundingBox)
     }
 
+    // Afisare box
     private fun drawBoundingBox(result: DetectionResult) {
         try {
             binding.overlayView?.post {
@@ -680,6 +686,7 @@ class HomeFragment : Fragment() {
     private var lastSoundTime = 0L
     private var lastSoundLabel = ""
 
+    // Redare sunet pentru obiectul detectat
     private fun playSoundOnDetection(label: String) {
         try {
             if (lastSoundLabel == label && SystemClock.elapsedRealtime() - lastSoundTime < 20000) {
